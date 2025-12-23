@@ -1,0 +1,329 @@
+/* ========================================
+   GENEL STİLLER
+   ======================================== */
+* {
+    margin: 0;
+    padding: 0;
+    box-sizing: border-box;
+}
+
+:root {
+    --primary-color: #2e7d32;
+    --primary-dark: #1b5e20;
+    --secondary-color: #558b2f;
+    --danger-color: #c62828;
+    --warning-color: #f9a825;
+    --success-color: #2e7d32;
+    --background: #f5f5f5;
+    --card-bg: #ffffff;
+    --text-primary: #212121;
+    --text-secondary: #757575;
+    --border-color: #e0e0e0;
+    --shadow: 0 2px 8px rgba(0,0,0,0.1);
+}
+
+body {
+    font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+    background-color: var(--background);
+    color: var(--text-primary);
+    line-height: 1.6;
+}
+
+/* ========================================
+   LAYOUT
+   ======================================== */
+.app-container {
+    min-height: 100vh;
+    display: flex;
+    flex-direction: column;
+}
+
+.header {
+    background: linear-gradient(135deg, var(--primary-color), var(--secondary-color));
+    color: white;
+    padding: 1rem 2rem;
+    text-align: center;
+}
+
+.header h1 {
+    font-size: 1.8rem;
+    margin-bottom: 0.25rem;
+}
+
+.header p {
+    opacity: 0.9;
+    font-size: 0.95rem;
+}
+
+.main-content {
+    flex: 1;
+    display: grid;
+    grid-template-columns: 1fr 400px;
+    gap: 1rem;
+    padding: 1rem;
+}
+
+/* ========================================
+   HARİTA BÖLÜMÜ
+   ======================================== */
+.map-section {
+    background: var(--card-bg);
+    border-radius: 12px;
+    box-shadow: var(--shadow);
+    overflow: hidden;
+    display: flex;
+    flex-direction: column;
+}
+
+.panel-header {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    padding: 1rem;
+    border-bottom: 1px solid var(--border-color);
+}
+
+.panel-header h2 {
+    font-size: 1.1rem;
+    color: var(--text-primary);
+}
+
+.toolbar {
+    display: flex;
+    gap: 0.5rem;
+}
+
+#map {
+    flex: 1;
+    min-height: 400px;
+}
+
+.coordinates-display {
+    padding: 0.75rem 1rem;
+    background: #fafafa;
+    border-top: 1px solid var(--border-color);
+    font-size: 0.85rem;
+    color: var(--text-secondary);
+}
+
+/* ========================================
+   ANALİZ BÖLÜMÜ
+   ======================================== */
+.analysis-section {
+    display: flex;
+    flex-direction: column;
+    gap: 1rem;
+}
+
+.card {
+    background: var(--card-bg);
+    border-radius: 12px;
+    box-shadow: var(--shadow);
+    padding: 1rem;
+}
+
+.card h3 {
+    font-size: 1rem;
+    color: var(--text-primary);
+    margin-bottom: 0.75rem;
+    padding-bottom: 0.5rem;
+    border-bottom: 1px solid var(--border-color);
+}
+
+/* Risk kartı */
+.risk-card {
+    text-align: center;
+}
+
+.risk-indicator {
+    padding: 1.5rem;
+}
+
+.risk-level {
+    font-size: 2.5rem;
+    font-weight: bold;
+    margin-bottom: 0.5rem;
+}
+
+.risk-score {
+    color: var(--text-secondary);
+}
+
+.risk-level.low {
+    color: var(--success-color);
+}
+
+.risk-level.medium {
+    color: var(--warning-color);
+}
+
+.risk-level.high {
+    color: var(--danger-color);
+}
+
+.risk-factors {
+    text-align: left;
+    font-size: 0.85rem;
+}
+
+.risk-factors ul {
+    list-style: none;
+    padding: 0;
+}
+
+.risk-factors li {
+    padding: 0.25rem 0;
+    padding-left: 1.5rem;
+    position: relative;
+}
+
+.risk-factors li::before {
+    content: "⚠️";
+    position: absolute;
+    left: 0;
+}
+
+/* Değerler kartı */
+.values-grid {
+    display: grid;
+    grid-template-columns: repeat(3, 1fr);
+    gap: 0.5rem;
+}
+
+.value-item {
+    text-align: center;
+    padding: 0.75rem;
+    background: #f5f5f5;
+    border-radius: 8px;
+}
+
+.value-label {
+    display: block;
+    font-size: 0.75rem;
+    color: var(--text-secondary);
+    margin-bottom: 0.25rem;
+}
+
+.value-number {
+    display: block;
+    font-size: 1.25rem;
+    font-weight: bold;
+    color: var(--primary-color);
+}
+
+/* Grafik kartı */
+.chart-card {
+    flex: 1;
+    min-height: 250px;
+}
+
+.chart-container {
+    height: 200px;
+}
+
+/* ========================================
+   BUTONLAR
+   ======================================== */
+.btn {
+    padding: 0.5rem 1rem;
+    border: none;
+    border-radius: 6px;
+    font-size: 0.9rem;
+    cursor: pointer;
+    transition: all 0.2s;
+}
+
+.btn-primary {
+    background: var(--primary-color);
+    color: white;
+}
+
+.btn-primary:hover {
+    background: var(--primary-dark);
+}
+
+.btn-primary:disabled {
+    background: #ccc;
+    cursor: not-allowed;
+}
+
+.btn-secondary {
+    background: #e0e0e0;
+    color: var(--text-primary);
+}
+
+.btn-secondary:hover {
+    background: #d0d0d0;
+}
+
+.btn-large {
+    width: 100%;
+    padding: 1rem;
+    font-size: 1.1rem;
+}
+
+/* ========================================
+   LOADING
+   ======================================== */
+.loading-overlay {
+    position: fixed;
+    top: 0;
+    left: 0;
+    right: 0;
+    bottom: 0;
+    background: rgba(255,255,255,0.9);
+    display: none;
+    justify-content: center;
+    align-items: center;
+    flex-direction: column;
+    z-index: 9999;
+}
+
+.loading-overlay.active {
+    display: flex;
+}
+
+.spinner {
+    width: 50px;
+    height: 50px;
+    border: 4px solid #e0e0e0;
+    border-top-color: var(--primary-color);
+    border-radius: 50%;
+    animation: spin 1s linear infinite;
+}
+
+@keyframes spin {
+    to { transform: rotate(360deg); }
+}
+
+/* ========================================
+   RESPONSİVE
+   ======================================== */
+@media (max-width: 900px) {
+    .main-content {
+        grid-template-columns: 1fr;
+    }
+    
+    .map-section {
+        min-height: 350px;
+    }
+    
+    .values-grid {
+        grid-template-columns: repeat(3, 1fr);
+    }
+}
+
+@media (max-width: 600px) {
+    .header h1 {
+        font-size: 1.4rem;
+    }
+    
+    .panel-header {
+        flex-direction: column;
+        gap: 0.5rem;
+    }
+    
+    .values-grid {
+        grid-template-columns: 1fr;
+    }
+}

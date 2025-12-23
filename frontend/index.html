@@ -1,0 +1,104 @@
+<!DOCTYPE html>
+<html lang="tr">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Tarımsal Kuraklık Takip Sistemi</title>
+    
+    <!-- Leaflet CSS -->
+    <link rel="stylesheet" href="https://unpkg.com/leaflet@1.9.4/dist/leaflet.css" />
+    <link rel="stylesheet" href="https://unpkg.com/leaflet-draw@1.0.4/dist/leaflet.draw.css" />
+    
+    <!-- Chart.js -->
+    <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+    
+    <!-- Ana stil -->
+    <link rel="stylesheet" href="css/style.css">
+</head>
+<body>
+    <div class="app-container">
+        <!-- Header -->
+        <header class="header">
+            <h1>🌾 Tarımsal Kuraklık Takip Sistemi</h1>
+            <p>Uydu verileriyle tarlanızı uzaktan izleyin</p>
+        </header>
+        
+        <!-- Ana içerik -->
+        <main class="main-content">
+            <!-- Sol panel: Harita -->
+            <section class="map-section">
+                <div class="panel-header">
+                    <h2>📍 Tarla Seçimi</h2>
+                    <div class="toolbar">
+                        <button id="btn-draw" class="btn btn-primary">✏️ Tarla Çiz</button>
+                        <button id="btn-clear" class="btn btn-secondary">🗑️ Temizle</button>
+                    </div>
+                </div>
+                <div id="map"></div>
+                <div class="coordinates-display">
+                    <span id="coords-text">Haritada bir nokta seçin veya tarla çizin</span>
+                </div>
+            </section>
+            
+            <!-- Sağ panel: Analiz -->
+            <section class="analysis-section">
+                <!-- Risk kartı -->
+                <div class="card risk-card" id="risk-card">
+                    <h3>⚠️ Risk Durumu</h3>
+                    <div class="risk-indicator" id="risk-indicator">
+                        <div class="risk-level" id="risk-level">-</div>
+                        <div class="risk-score" id="risk-score">Analiz için tarla seçin</div>
+                    </div>
+                    <div class="risk-factors" id="risk-factors"></div>
+                </div>
+                
+                <!-- Güncel değerler -->
+                <div class="card values-card">
+                    <h3>📊 Güncel Değerler</h3>
+                    <div class="values-grid">
+                        <div class="value-item">
+                            <span class="value-label">NDVI</span>
+                            <span class="value-number" id="current-ndvi">-</span>
+                        </div>
+                        <div class="value-item">
+                            <span class="value-label">NDMI</span>
+                            <span class="value-number" id="current-ndmi">-</span>
+                        </div>
+                        <div class="value-item">
+                            <span class="value-label">Tarih</span>
+                            <span class="value-number" id="current-date">-</span>
+                        </div>
+                    </div>
+                </div>
+                
+                <!-- Zaman serisi grafik -->
+                <div class="card chart-card">
+                    <h3>📈 Zaman Serisi</h3>
+                    <div class="chart-container">
+                        <canvas id="timeseries-chart"></canvas>
+                    </div>
+                </div>
+                
+                <!-- Analiz butonu -->
+                <button id="btn-analyze" class="btn btn-large btn-primary" disabled>
+                    🔍 Analiz Et
+                </button>
+            </section>
+        </main>
+        
+        <!-- Loading overlay -->
+        <div class="loading-overlay" id="loading">
+            <div class="spinner"></div>
+            <p>Veriler yükleniyor...</p>
+        </div>
+    </div>
+    
+    <!-- Scripts -->
+    <script src="https://unpkg.com/leaflet@1.9.4/dist/leaflet.js"></script>
+    <script src="https://unpkg.com/leaflet-draw@1.0.4/dist/leaflet.draw.js"></script>
+    <script src="js/api.js"></script>
+    <script src="js/map.js"></script>
+    <script src="js/charts.js"></script>
+    <script src="js/app.js"></script>
+</body>
+</html>
