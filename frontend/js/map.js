@@ -90,6 +90,21 @@ const MapModule = {
      * Event listener'ları kur
      */
     setupEventListeners() {
+        // Koordinata git butonu
+        const btnGoto = document.getElementById('btn-goto');
+        if (btnGoto) {
+            btnGoto.addEventListener('click', () => {
+                const lat = parseFloat(document.getElementById('input-lat').value);
+                const lng = parseFloat(document.getElementById('input-lng').value);
+                
+                if (!isNaN(lat) && !isNaN(lng)) {
+                    this.goToCoordinates(lat, lng);
+                } else {
+                    alert('Lütfen geçerli koordinat giriniz!');
+                }
+            });
+        }
+
         // Çizim tamamlandığında
         this.map.on('draw:created', (e) => {
             const layer = e.layer;
@@ -146,6 +161,35 @@ const MapModule = {
         });
     },
     
+    /**
+     * Belirtilen koordinata git
+     */
+    goToCoordinates(lat, lng) {
+        // Haritayı oraya odakla
+        this.map.flyTo([lat, lng], 15);
+        
+        // Varsa eski çizimleri temizle
+        this.clearAll();
+        
+        // İşaretçi ekle
+        const marker = L.marker([lat, lng], {
+            icon: L.divIcon({
+                className: 'custom-marker',
+                html: '📍',
+                iconSize: [30, 30],
+                iconAnchor: [15, 30]
+            })
+        }).addTo(this.drawnItems);
+        
+        marker.bindPopup(`<b>Konum:</b><br>${lat.toFixed(5)}, ${lng.toFixed(5)}`).openPopup();
+        
+        // Seçili durumu güncelle
+        this.currentMarker = marker;
+        this.selectedCoordinates = [lng, lat];
+        this.updateCoordinatesDisplay();
+        this.enableAnalyzeButton();
+    },
+
     /**
      * Harita tıklaması
      */
