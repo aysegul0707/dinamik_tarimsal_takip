@@ -1,41 +1,60 @@
 from flask import Flask
 from flask_cors import CORS
+from flask_sqlalchemy import SQLAlchemy
+from flask_jwt_extended import JWTManager
 import ee
-
 import os
 
+db = SQLAlchemy()
+jwt = JWTManager()
+
 def create_app():
-    """Flask uygulama factory"""
-    # Frontend klasörünün yolunu bul
-    base_dir = os.path.abspath(os.path.dirname(__file__))
-    frontend_dir = os.path.join(base_dir, '..', '..', 'frontend')
+    """Uygulama Factory"""
+    app = Flask(__name__)
     
-    app = Flask(__name__, static_folder=frontend_dir, static_url_path='')
+    # Ayarları yükle
     app.config.from_object('app.config.Config')
     
-    # CORS ayarları (frontend erişimi için)
-    CORS(app, resources={r"/api/*": {"origins": "*"}})
+    # JWT Ayarı (Config dosyasına eklemeyi unuttuysak diye default değer)
+    app.config.setdefault('JWT_SECRET_KEY', app.config['SECRET_KEY'])
     
-    # Google Earth Engine başlat
+    # Eklentileri başlat
+    CORS(app, resources={r"/api/*": {"origins": "*"}}, supports_credentials=True)
+    db.init_app(app)
+    jwt.init_app(app)
+    
+    # GEE Başlat
     try:
-        ee.Initialize(project=app.config['GEE_PROJECT_ID'])
-        print("✅ Google Earth Engine bağlantısı başarılı")
+        if app.config.get('GEE_PROJECT_ID'):
+            ee.Initialize(project=app.config['GEE_PROJECT_ID'])
+        else:
+            ee.Initialize()
+        print("✅ GEE Bağlantısı Başarılı")
     except Exception as e:
-        print(f"⚠️ GEE bağlantı hatası: {e}")
-        print("   ee.Authenticate() çalıştırmanız gerekebilir")
+        print(f"⚠️ GEE Hatası: {e}")
     
-    # Blueprint'leri kaydet
+    # Klasör kontrolü
+    ml_dir = 'ml/models'
+    if not os.path.exists(ml_dir):
+        os.makedirs(ml_dir)
+
+    from app import models
+
+    # --- ROUTE'LARI KAYDET ---
+    # Artık route'ları güvenle açabiliriz çünkü içlerini birazdan güncelleyeceğiz.
+    
+    from app.routes.auth import auth_bp
+    app.register_blueprint(auth_bp, url_prefix='/api/auth')
+    
     from app.routes.fields import fields_bp
-    from app.routes.analysis import analysis_bp
-    from app.routes.risk import risk_bp
-    
     app.register_blueprint(fields_bp, url_prefix='/api')
-    app.register_blueprint(analysis_bp, url_prefix='/api')
-    app.register_blueprint(risk_bp, url_prefix='/api')
     
-    # Ana sayfa
+    # Analiz rotasını şimdilik kapalı tutabilirsin veya açabilirsin
+    # from app.routes.analysis import analysis_bp
+    # app.register_blueprint(analysis_bp, url_prefix='/api')
+    
     @app.route('/')
     def index():
-        return app.send_static_file('index.html')
+        return {'status': 'running', 'version': '3.0'}
     
     return app

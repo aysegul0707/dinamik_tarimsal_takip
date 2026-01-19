@@ -9,16 +9,7 @@ analysis_bp = Blueprint('analysis', __name__)
 
 @analysis_bp.route('/analyze', methods=['POST'])
 def analyze():
-    """
-    Tarla analizi yap
-    
-    Request body:
-    {
-        "coordinates": [32.5, 37.9] veya [[...], [...], ...],
-        "start_date": "2024-01-01",  (opsiyonel)
-        "end_date": "2024-06-01"     (opsiyonel)
-    }
-    """
+    """Genel analiz"""
     data = request.get_json()
     
     if not data or 'coordinates' not in data:
@@ -29,11 +20,11 @@ def analyze():
     
     coordinates = data['coordinates']
     end_date = data.get('end_date', datetime.now().strftime('%Y-%m-%d'))
-    start_date = data.get('start_date', 
+    start_date = data.get('start_date',
         (datetime.now() - timedelta(days=365)).strftime('%Y-%m-%d'))
     
     try:
-        # Zaman serisi verisi çek
+        # Zaman serisi çek
         df = GEEService.get_timeseries(coordinates, start_date, end_date)
         
         if df.empty:
@@ -42,10 +33,10 @@ def analyze():
                 'error': 'Bu tarih aralığında veri bulunamadı'
             }), 404
         
-        # Kaliteli verileri filtrele
+        # Kaliteli veri filtresi
         df_quality = df[df['clear_pixel_ratio'] > 0.5]
         
-        # Özet istatistikler
+        # Özet
         summary = {
             'total_images': len(df),
             'quality_images': len(df_quality),
@@ -54,18 +45,22 @@ def analyze():
                 'end': df['date'].max().strftime('%Y-%m-%d')
             },
             'ndvi': {
-                'mean': df_quality['ndvi_mean'].mean(),
-                'min': df_quality['ndvi_mean'].min(),
-                'max': df_quality['ndvi_mean'].max(),
-                'current': df_quality.iloc[-1]['ndvi_mean'] if len(df_quality) > 0 else None
+                'mean': float(df_quality['ndvi_mean'].mean()),
+                'min': float(df_quality['ndvi_mean'].min()),
+                'max': float(df_quality['ndvi_mean'].max()),
+                'current': float(df_quality.iloc[-1]['ndvi_mean']) if len(df_quality) > 0 else None
             },
             'ndmi': {
-                'mean': df_quality['ndmi_mean'].mean(),
-                'current': df_quality.iloc[-1]['ndmi_mean'] if len(df_quality) > 0 else None
+                'mean': float(df_quality['ndmi_mean'].mean()),
+                'current': float(df_quality.iloc[-1]['ndmi_mean']) if len(df_quality) > 0 else None
+            },
+            'msi': {
+                'mean': float(df_quality['msi_mean'].mean()),
+                'current': float(df_quality.iloc[-1]['msi_mean']) if len(df_quality) > 0 else None
             }
         }
         
-        # Trend analizi
+        # Trend
         trend = BaselineService.calculate_trend(df_quality)
         
         return jsonify({
@@ -84,7 +79,7 @@ def analyze():
 
 @analysis_bp.route('/timeseries', methods=['POST'])
 def get_timeseries():
-    """Zaman serisi verisi getir"""
+    """Zaman serisi verisi"""
     data = request.get_json()
     
     coordinates = data.get('coordinates')
@@ -115,7 +110,7 @@ def get_timeseries():
 
 @analysis_bp.route('/current', methods=['POST'])
 def get_current():
-    """Güncel durumu getir"""
+    """Güncel durum"""
     data = request.get_json()
     coordinates = data.get('coordinates')
     
