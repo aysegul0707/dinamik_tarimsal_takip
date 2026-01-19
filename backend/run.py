@@ -11,4 +11,4 @@ if __name__ == '__main__':
     print("📖 API Dokümantasyonu: http://localhost:5000/health")
     print("=" * 60)
     
-    app.run(debug=True, host='0.0.0.0', port=5000)
+    app.run(debug=False, host='0.0.0.0', port=5000, threaded=True)

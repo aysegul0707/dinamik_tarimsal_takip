@@ -1,0 +1,385 @@
+<!DOCTYPE html>
+<html lang="tr">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Dashboard - AgriWatch</title>
+    
+    <!-- Google Fonts -->
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Poppins:wght@300;400;500;600;700;800&display=swap" rel="stylesheet">
+    
+    <link rel="stylesheet" href="css/style.css">
+    <link rel="stylesheet" href="css/dashboard.css">
+</head>
+<body>
+    <div class="app-container">
+        <!-- Sidebar -->
+        <aside class="sidebar">
+            <div class="logo">
+                <div class="logo-icon">🌾</div>
+                <div class="logo-text">
+                    <span class="logo-title">AgriWatch</span>
+                    <span class="logo-subtitle">Kuraklık Takip</span>
+                </div>
+            </div>
+            
+            <nav class="sidebar-nav">
+                <a href="dashboard.html" class="nav-item active">
+                    <span class="nav-icon">🏠</span>
+                    <span class="nav-text">Panel</span>
+                </a>
+                <a href="index.html" class="nav-item">
+                    <span class="nav-icon">🗺️</span>
+                    <span class="nav-text">Harita</span>
+                </a>
+                <a href="my-fields.html" class="nav-item">
+                    <span class="nav-icon">🌾</span>
+                    <span class="nav-text">Tarlalarım</span>
+                </a>
+                <a href="reports.html" class="nav-item">
+                    <span class="nav-icon">📈</span>
+                    <span class="nav-text">Raporlar</span>
+                </a>
+                <a href="#" class="nav-item" onclick="logout()">
+                    <span class="nav-icon">🚪</span>
+                    <span class="nav-text">Çıkış</span>
+                </a>
+            </nav>
+            
+            <div class="sidebar-footer">
+                <div class="user-info">
+                    <div class="user-avatar" id="user-avatar">👤</div>
+                    <div class="user-details">
+                        <span class="user-name" id="user-name">Kullanıcı</span>
+                        <span class="user-role" id="user-role">Ücretsiz Plan</span>
+                    </div>
+                </div>
+            </div>
+        </aside>
+
+        <!-- Main Content -->
+        <main class="main-wrapper">
+            <!-- Top Bar -->
+            <header class="topbar">
+                <div class="topbar-left">
+                    <h1 class="page-title">Panel</h1>
+                    <p class="page-subtitle">Hoş geldiniz, <span id="welcome-name">Kullanıcı</span>!</p>
+                </div>
+                <div class="topbar-right">
+                    <div class="subscription-badge" id="subscription-badge">
+                        <span class="badge-icon">✨</span>
+                        <span class="badge-text">Ücretsiz</span>
+                    </div>
+                </div>
+            </header>
+
+            <!-- Dashboard Content -->
+            <div class="dashboard-content" id="dashboard-main">
+                <!-- Onboarding Screen (for new users) -->
+                <div class="onboarding-screen" id="onboarding-screen" style="display: none;">
+                    <div class="onboarding-card">
+                        <div class="onboarding-icon">🎉</div>
+                        <h2>Hoş Geldiniz!</h2>
+                        <p class="onboarding-subtitle">Tarımsal kuraklık takip sistemine hoş geldiniz</p>
+                        
+                        <div class="onboarding-steps">
+                            <div class="step-item">
+                                <div class="step-number">1</div>
+                                <div class="step-content">
+                                    <h3>Tarla Çizin</h3>
+                                    <p>Harita üzerinde tarlanızı işaretleyin</p>
+                                </div>
+                            </div>
+                            <div class="step-item">
+                                <div class="step-number">2</div>
+                                <div class="step-content">
+                                    <h3>Veriler Analiz Edilecek</h3>
+                                    <p>Son 5 yıllık uydu verileri otomatik olarak işlenecek</p>
+                                </div>
+                            </div>
+                            <div class="step-item">
+                                <div class="step-number">3</div>
+                                <div class="step-content">
+                                    <h3>Risk Durumunu Görün</h3>
+                                    <p>Makine öğrenmesi ile kuraklık risk tahmini</p>
+                                </div>
+                            </div>
+                        </div>
+                        
+                        <a href="index.html" class="btn-start">
+                            <span>🗺️</span>
+                            İlk Tarlayı Çiz
+                        </a>
+                        
+                        <p class="onboarding-note">
+                            💡 İlk tarlanızı çizdikten sonra analiz otomatik başlayacak
+                        </p>
+                    </div>
+                </div>
+
+                <!-- Stats Row -->
+                <div class="stats-row">
+                    <div class="stat-card-large">
+                        <div class="stat-icon-large">🌾</div>
+                        <div class="stat-content">
+                            <span class="stat-number" id="field-count">0</span>
+                            <span class="stat-label">Toplam Tarla</span>
+                        </div>
+                        <div class="stat-limit" id="field-limit">/ 3 (Limit)</div>
+                    </div>
+                    
+                    <div class="stat-card-large">
+                        <div class="stat-icon-large">📊</div>
+                        <div class="stat-content">
+                            <span class="stat-number" id="analysis-count">0</span>
+                            <span class="stat-label">Toplam Analiz</span>
+                        </div>
+                        <div class="stat-trend up">
+                            <span>↑</span> Bu ay
+                        </div>
+                    </div>
+                    
+                    <div class="stat-card-large alert-card">
+                        <div class="stat-icon-large">⚠️</div>
+                        <div class="stat-content">
+                            <span class="stat-number" id="alert-count">0</span>
+                            <span class="stat-label">Aktif Uyarı</span>
+                        </div>
+                        <div class="stat-action">
+                            <a href="my-fields.html">Detaylar →</a>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Quick Actions -->
+                <div class="section-header">
+                    <h2>Hızlı İşlemler</h2>
+                </div>
+                <div class="quick-actions">
+                    <a href="index.html" class="action-card">
+                        <div class="action-icon">🗺️</div>
+                        <div class="action-content">
+                            <h3>Yeni Tarla Ekle</h3>
+                            <p>Haritadan tarla çizin</p>
+                        </div>
+                        <div class="action-arrow">→</div>
+                    </a>
+                    
+                    <a href="my-fields.html" class="action-card">
+                        <div class="action-icon">📊</div>
+                        <div class="action-content">
+                            <h3>Tarlalarımı Gör</h3>
+                            <p>Tüm tarlalarınızı yönetin</p>
+                        </div>
+                        <div class="action-arrow">→</div>
+                    </a>
+                    
+                    <a href="reports.html" class="action-card">
+                        <div class="action-icon">📈</div>
+                        <div class="action-content">
+                            <h3>Raporlar</h3>
+                            <p>Aylık analizleri görüntüleyin</p>
+                        </div>
+                        <div class="action-arrow">→</div>
+                    </a>
+                </div>
+
+                <!-- Recent Fields -->
+                <div class="section-header">
+                    <h2>Son Eklenen Tarlalar</h2>
+                    <a href="my-fields.html" class="see-all">Tümünü Gör →</a>
+                </div>
+                <div class="recent-fields" id="recent-fields">
+                    <!-- Dinamik olarak doldurulacak -->
+                    <div class="empty-state" id="empty-fields">
+                        <div class="empty-icon">🌱</div>
+                        <h3>Henüz tarla eklemediniz</h3>
+                        <p>Haritadan tarla çizerek başlayın</p>
+                        <a href="index.html" class="btn-primary">Tarla Ekle</a>
+                    </div>
+                </div>
+
+                <!-- Premium Banner (for free users) -->
+                <div class="premium-banner" id="premium-banner">
+                    <div class="premium-content">
+                        <div class="premium-icon">👑</div>
+                        <div class="premium-text">
+                            <h3>Premium'a Geçin</h3>
+                            <p>20 tarla, günlük raporlar, 1 yıllık geçmiş verisi ve daha fazlası!</p>
+                        </div>
+                    </div>
+                    <div class="premium-action">
+                        <button class="btn-premium" onclick="showPremiumModal()">
+                            <span>Premium'a Yükselt</span>
+                        </button>
+                    </div>
+                </div>
+            </div>
+        </main>
+    </div>
+
+    <!-- Premium Modal -->
+    <div class="modal-overlay" id="premium-modal">
+        <div class="modal-card">
+            <button class="modal-close" onclick="closePremiumModal()">×</button>
+            <div class="modal-header">
+                <div class="modal-icon">👑</div>
+                <h2>Premium'a Yükselt</h2>
+                <p>Tüm özelliklerin kilidini açın</p>
+            </div>
+            
+            <div class="modal-body">
+                <div class="plan-comparison">
+                    <div class="plan-column free">
+                        <h4>Ücretsiz</h4>
+                        <ul>
+                            <li>✓ 3 tarla limiti</li>
+                            <li>✓ Haftalık raporlar</li>
+                            <li>✓ 90 gün geçmiş veri</li>
+                            <li>✗ Yüksek çözünürlük</li>
+                        </ul>
+                    </div>
+                    <div class="plan-column premium">
+                        <div class="popular-badge">Popüler</div>
+                        <h4>Premium</h4>
+                        <ul>
+                            <li>✓ 20 tarla limiti</li>
+                            <li>✓ Günlük raporlar</li>
+                            <li>✓ 1 yıl geçmiş veri</li>
+                            <li>✓ Yüksek çözünürlük</li>
+                        </ul>
+                    </div>
+                </div>
+                
+                <div class="contact-premium">
+                    <p>Premium'a geçmek için bizimle iletişime geçin:</p>
+                    <div class="contact-info-modal">
+                        <span class="contact-icon">🌐</span>
+                        <span class="contact-text">www.kayatarim.com</span>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <script src="js/api.js"></script>
+    <script>
+        // Check auth
+        const token = localStorage.getItem('token');
+        const user = JSON.parse(localStorage.getItem('user') || '{}');
+        
+        if (!token) {
+            window.location.href = 'login.html';
+        }
+        
+        // Update UI with user info
+        document.getElementById('user-name').textContent = user.username || 'Kullanıcı';
+        document.getElementById('welcome-name').textContent = user.username || 'Kullanıcı';
+        document.getElementById('user-avatar').textContent = (user.username || 'U')[0].toUpperCase();
+        
+        // Update subscription badge
+        const badge = document.getElementById('subscription-badge');
+        const userRole = document.getElementById('user-role');
+        if (user.role === 'premium') {
+            badge.innerHTML = '<span class="badge-icon">👑</span><span class="badge-text">Premium</span>';
+            badge.classList.add('premium');
+            userRole.textContent = 'Premium Plan';
+            document.getElementById('premium-banner').style.display = 'none';
+            document.getElementById('field-limit').textContent = '/ 20';
+        }
+        
+        // Load dashboard data
+        async function loadDashboard() {
+            try {
+                // Get user's fields
+                const response = await fetch('http://localhost:5000/api/fields', {
+                    headers: {
+                        'Authorization': 'Bearer ' + token
+                    }
+                });
+                
+                if (response.ok) {
+                    const data = await response.json();
+                    const fields = data.fields || [];
+                    
+                    // YENİ KULLANICI KONTROLÜ - Tarla yoksa onboarding göster
+                    if (fields.length === 0) {
+                        document.getElementById('onboarding-screen').style.display = 'flex';
+                        document.querySelector('.stats-row').style.display = 'none';
+                        document.querySelector('.quick-actions').style.display = 'none';
+                        document.querySelector('.recent-fields').style.display = 'none';
+                        document.querySelectorAll('.section-header').forEach(el => el.style.display = 'none');
+                        return;
+                    }
+                    
+                    // Update stats
+                    document.getElementById('field-count').textContent = fields.length;
+                    
+                    // Show recent fields
+                    const container = document.getElementById('recent-fields');
+                    const emptyState = document.getElementById('empty-fields');
+                    
+                    if (fields.length > 0) {
+                        emptyState.style.display = 'none';
+                        
+                        // Show last 3 fields
+                        const recentFields = fields.slice(-3).reverse();
+                        
+                        recentFields.forEach(field => {
+                            const fieldCard = document.createElement('div');
+                            fieldCard.className = 'field-mini-card';
+                            fieldCard.innerHTML = `
+                                <div class="field-mini-icon">🌾</div>
+                                <div class="field-mini-info">
+                                    <h4>${field.name}</h4>
+                                    <p>${field.location || 'Konum belirtilmemiş'}</p>
+                                </div>
+                                <div class="field-mini-status ${field.model_ready ? 'ready' : 'pending'}">
+                                    ${field.model_ready ? '✓ Hazır' : '⏳ Bekliyor'}
+                                </div>
+                            `;
+                            fieldCard.onclick = () => {
+                                window.location.href = `field-detail.html?id=${field.id}`;
+                            };
+                            container.insertBefore(fieldCard, emptyState);
+                        });
+                    }
+                } else if (response.status === 401) {
+                    // Token expired
+                    logout();
+                }
+            } catch (error) {
+                console.error('Dashboard yüklenirken hata:', error);
+            }
+        }
+        
+        // Logout function
+        function logout() {
+            localStorage.removeItem('token');
+            localStorage.removeItem('user');
+            window.location.href = 'login.html';
+        }
+        
+        // Premium modal functions
+        function showPremiumModal() {
+            document.getElementById('premium-modal').classList.add('show');
+        }
+        
+        function closePremiumModal() {
+            document.getElementById('premium-modal').classList.remove('show');
+        }
+        
+        // Close modal on outside click
+        document.getElementById('premium-modal').addEventListener('click', (e) => {
+            if (e.target.classList.contains('modal-overlay')) {
+                closePremiumModal();
+            }
+        });
+        
+        // Load data on page load
+        loadDashboard();
+    </script>
+</body>
+</html>

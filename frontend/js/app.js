@@ -102,6 +102,7 @@ const App = {
         const levelElement = document.getElementById('risk-level');
         const scoreElement = document.getElementById('risk-score');
         const factorsElement = document.getElementById('risk-factors');
+        const riskCircle = document.getElementById('risk-indicator');
         
         // Final level (ML varsa ML, yoksa rule-based)
         const level = riskData.final_level;
@@ -109,14 +110,15 @@ const App = {
         
         // Level gösterimi
         levelElement.textContent = level;
-        levelElement.className = 'risk-level';
         
+        // Risk circle renklendirmesi
+        riskCircle.className = 'risk-circle';
         if (level === 'Düşük') {
-            levelElement.classList.add('low');
+            riskCircle.classList.add('low');
         } else if (level === 'Orta') {
-            levelElement.classList.add('medium');
+            riskCircle.classList.add('medium');
         } else {
-            levelElement.classList.add('high');
+            riskCircle.classList.add('high');
         }
         
         // Skor gösterimi
@@ -130,13 +132,13 @@ const App = {
                 </ul>
             `;
         } else {
-            factorsElement.innerHTML = '<p style="color: #4caf50;">✓ Herhangi bir risk faktörü tespit edilmedi</p>';
+            factorsElement.innerHTML = '<p style="color: #27ae60; text-align: center;">✓ Herhangi bir risk faktörü tespit edilmedi</p>';
         }
         
         // Z-skoru ve trend bilgisi
         if (ruleBased.z_score !== null) {
             const zInfo = document.createElement('p');
-            zInfo.style.cssText = 'font-size: 0.8rem; color: #666; margin-top: 0.5rem;';
+            zInfo.style.cssText = 'font-size: 0.8rem; color: #64748b; margin-top: 0.5rem; text-align: center;';
             zInfo.textContent = `Z-skoru: ${ruleBased.z_score.toFixed(2)} | Trend: ${ruleBased.trend.direction}`;
             factorsElement.appendChild(zInfo);
         }

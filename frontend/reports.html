@@ -1,0 +1,570 @@
+<!DOCTYPE html>
+<html lang="tr">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Raporlar - Kuraklık Analiz Sistemi</title>
+    <link rel="stylesheet" href="css/style.css">
+    <link rel="stylesheet" href="css/dashboard.css">
+    <link rel="stylesheet" href="css/reports.css">
+    <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+</head>
+<body>
+    <!-- Sidebar -->
+    <aside class="sidebar">
+        <div class="sidebar-header">
+            <span class="sidebar-logo">🌾</span>
+            <h1 class="sidebar-title">AgriDrought</h1>
+        </div>
+        
+        <nav class="sidebar-nav">
+            <a href="dashboard.html" class="nav-item">
+                <span class="nav-icon">📊</span>
+                <span class="nav-label">Panel</span>
+            </a>
+            <a href="my-fields.html" class="nav-item">
+                <span class="nav-icon">🗺️</span>
+                <span class="nav-label">Tarlalarım</span>
+            </a>
+            <a href="index.html" class="nav-item">
+                <span class="nav-icon">🛰️</span>
+                <span class="nav-label">Harita</span>
+            </a>
+            <a href="reports.html" class="nav-item active">
+                <span class="nav-icon">📈</span>
+                <span class="nav-label">Raporlar</span>
+            </a>
+        </nav>
+        
+        <div class="sidebar-footer">
+            <a href="#" class="nav-item" onclick="logout()">
+                <span class="nav-icon">🚪</span>
+                <span class="nav-label">Çıkış Yap</span>
+            </a>
+        </div>
+    </aside>
+
+    <!-- Main Content -->
+    <main class="main-content">
+        <!-- Topbar -->
+        <header class="topbar">
+            <div class="topbar-left">
+                <h2>📈 Raporlar</h2>
+            </div>
+            <div class="topbar-right">
+                <select id="fieldFilter" class="filter-select">
+                    <option value="all">Tüm Tarlalar</option>
+                </select>
+                <select id="periodFilter" class="filter-select">
+                    <option value="weekly">Haftalık</option>
+                    <option value="monthly" selected>Aylık</option>
+                    <option value="yearly">Yıllık</option>
+                </select>
+                <button class="btn-export-all" onclick="exportAllReports()">
+                    <span>📥</span> Tümünü İndir
+                </button>
+            </div>
+        </header>
+
+        <!-- Reports Content -->
+        <div class="reports-content">
+            <!-- Summary Cards -->
+            <div class="summary-row">
+                <div class="summary-card">
+                    <div class="summary-icon" style="background: linear-gradient(135deg, #10B981, #059669)">
+                        📊
+                    </div>
+                    <div class="summary-info">
+                        <span class="summary-value" id="totalAnalysis">24</span>
+                        <span class="summary-label">Toplam Analiz</span>
+                    </div>
+                </div>
+                <div class="summary-card">
+                    <div class="summary-icon" style="background: linear-gradient(135deg, #3B82F6, #2563eb)">
+                        🌿
+                    </div>
+                    <div class="summary-info">
+                        <span class="summary-value" id="avgNdvi">0.72</span>
+                        <span class="summary-label">Ort. NDVI</span>
+                    </div>
+                </div>
+                <div class="summary-card">
+                    <div class="summary-icon" style="background: linear-gradient(135deg, #06B6D4, #0891b2)">
+                        💧
+                    </div>
+                    <div class="summary-info">
+                        <span class="summary-value" id="avgNdmi">0.35</span>
+                        <span class="summary-label">Ort. NDMI</span>
+                    </div>
+                </div>
+                <div class="summary-card">
+                    <div class="summary-icon" style="background: linear-gradient(135deg, #f59e0b, #d97706)">
+                        ⚠️
+                    </div>
+                    <div class="summary-info">
+                        <span class="summary-value" id="alertCount">3</span>
+                        <span class="summary-label">Uyarı</span>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Charts Section -->
+            <div class="charts-section">
+                <div class="chart-card large">
+                    <div class="chart-header">
+                        <h3>📈 Zaman Serisi Analizi</h3>
+                        <div class="chart-legend">
+                            <span class="legend-item">
+                                <span class="legend-dot" style="background: #10B981"></span>
+                                NDVI
+                            </span>
+                            <span class="legend-item">
+                                <span class="legend-dot" style="background: #3B82F6"></span>
+                                NDMI
+                            </span>
+                            <span class="legend-item">
+                                <span class="legend-dot" style="background: #EF4444"></span>
+                                Risk
+                            </span>
+                        </div>
+                    </div>
+                    <div class="chart-body">
+                        <canvas id="timeSeriesChart"></canvas>
+                    </div>
+                </div>
+
+                <div class="charts-row">
+                    <div class="chart-card">
+                        <div class="chart-header">
+                            <h3>🎯 Risk Dağılımı</h3>
+                        </div>
+                        <div class="chart-body">
+                            <canvas id="riskDistChart"></canvas>
+                        </div>
+                    </div>
+                    <div class="chart-card">
+                        <div class="chart-header">
+                            <h3>🗺️ Tarla Karşılaştırma</h3>
+                        </div>
+                        <div class="chart-body">
+                            <canvas id="fieldCompareChart"></canvas>
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Monthly Reports -->
+            <div class="monthly-reports-section">
+                <div class="section-header">
+                    <h2>📋 Aylık Raporlar</h2>
+                </div>
+
+                <div class="reports-grid" id="reportsGrid">
+                    <!-- Reports will be loaded here -->
+                </div>
+            </div>
+
+            <!-- Alerts Section -->
+            <div class="alerts-section">
+                <div class="section-header">
+                    <h2>🚨 Son Uyarılar</h2>
+                    <button class="btn-view-all">Tümünü Gör</button>
+                </div>
+
+                <div class="alerts-list" id="alertsList">
+                    <div class="alert-item critical">
+                        <div class="alert-icon">🔴</div>
+                        <div class="alert-content">
+                            <h4>Kritik Kuraklık Riski</h4>
+                            <p>Tarla A'da nem seviyesi kritik eşiğin altına düştü</p>
+                            <span class="alert-time">2 saat önce</span>
+                        </div>
+                        <button class="btn-alert-action">İncele</button>
+                    </div>
+                    <div class="alert-item warning">
+                        <div class="alert-icon">🟠</div>
+                        <div class="alert-content">
+                            <h4>Yüksek Sıcaklık Uyarısı</h4>
+                            <p>Önümüzdeki hafta için yüksek sıcaklık bekleniyor</p>
+                            <span class="alert-time">1 gün önce</span>
+                        </div>
+                        <button class="btn-alert-action">İncele</button>
+                    </div>
+                    <div class="alert-item info">
+                        <div class="alert-icon">🔵</div>
+                        <div class="alert-content">
+                            <h4>Analiz Tamamlandı</h4>
+                            <p>Tarla B için aylık analiz raporu hazır</p>
+                            <span class="alert-time">2 gün önce</span>
+                        </div>
+                        <button class="btn-alert-action">Görüntüle</button>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Premium Banner (for free users) -->
+            <div class="premium-reports-banner" id="premiumBanner">
+                <div class="banner-content">
+                    <div class="banner-icon">⭐</div>
+                    <div class="banner-text">
+                        <h3>Daha Detaylı Raporlar</h3>
+                        <p>Premium üyelik ile günlük raporlar, geçmiş veri analizi ve daha fazlası!</p>
+                    </div>
+                    <button class="btn-upgrade" onclick="showPremiumInfo()">
+                        Premium'a Yükselt
+                    </button>
+                </div>
+            </div>
+        </div>
+    </main>
+
+    <!-- Premium Info Modal -->
+    <div class="modal" id="premiumModal">
+        <div class="modal-overlay" onclick="closePremiumModal()"></div>
+        <div class="modal-card premium-modal-card">
+            <div class="modal-header">
+                <h3>⭐ Premium Üyelik</h3>
+                <button class="modal-close" onclick="closePremiumModal()">×</button>
+            </div>
+            <div class="modal-body">
+                <div class="premium-features">
+                    <div class="feature-item">
+                        <span class="feature-icon">📊</span>
+                        <div>
+                            <h4>Günlük Raporlar</h4>
+                            <p>Haftalık yerine günlük analiz raporları</p>
+                        </div>
+                    </div>
+                    <div class="feature-item">
+                        <span class="feature-icon">📈</span>
+                        <div>
+                            <h4>1 Yıllık Geçmiş</h4>
+                            <p>365 güne kadar geçmiş veri analizi</p>
+                        </div>
+                    </div>
+                    <div class="feature-item">
+                        <span class="feature-icon">🗺️</span>
+                        <div>
+                            <h4>20 Tarla</h4>
+                            <p>3 yerine 20 tarla ekleyebilme</p>
+                        </div>
+                    </div>
+                    <div class="feature-item">
+                        <span class="feature-icon">📥</span>
+                        <div>
+                            <h4>PDF Raporlar</h4>
+                            <p>Detaylı PDF rapor indirme</p>
+                        </div>
+                    </div>
+                </div>
+                
+                <div class="premium-contact">
+                    <p>Premium üyelik için bizimle iletişime geçin:</p>
+                    <div class="contact-info">www.kayatarim.com</div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <script>
+        const API_BASE = 'http://localhost:5000/api';
+
+        // Check auth
+        function checkAuth() {
+            const token = localStorage.getItem('token');
+            if (!token) {
+                window.location.href = 'login.html';
+                return null;
+            }
+            return token;
+        }
+
+        // Logout
+        function logout() {
+            localStorage.removeItem('token');
+            localStorage.removeItem('user');
+            window.location.href = 'login.html';
+        }
+
+        // Load reports data
+        async function loadReportsData() {
+            const token = checkAuth();
+            if (!token) return;
+
+            // Check subscription
+            const user = JSON.parse(localStorage.getItem('user') || '{}');
+            if (user.subscription_type === 'premium') {
+                document.getElementById('premiumBanner').style.display = 'none';
+            }
+
+            try {
+                // Load fields for filter
+                const fieldsResponse = await fetch(`${API_BASE}/fields`, {
+                    headers: { 'Authorization': `Bearer ${token}` }
+                });
+                
+                if (fieldsResponse.ok) {
+                    const fields = await fieldsResponse.json();
+                    populateFieldFilter(fields);
+                }
+
+                // Load reports
+                initCharts();
+                loadMonthlyReports();
+            } catch (error) {
+                console.error('Error:', error);
+                // Use demo data
+                initCharts();
+                loadDemoReports();
+            }
+        }
+
+        // Populate field filter
+        function populateFieldFilter(fields) {
+            const select = document.getElementById('fieldFilter');
+            fields.forEach(field => {
+                const option = document.createElement('option');
+                option.value = field.id;
+                option.textContent = field.name;
+                select.appendChild(option);
+            });
+        }
+
+        // Init charts
+        function initCharts() {
+            // Time Series Chart
+            const tsCtx = document.getElementById('timeSeriesChart').getContext('2d');
+            new Chart(tsCtx, {
+                type: 'line',
+                data: {
+                    labels: ['Oca', 'Şub', 'Mar', 'Nis', 'May', 'Haz', 'Tem', 'Ağu', 'Eyl', 'Eki', 'Kas', 'Ara'],
+                    datasets: [
+                        {
+                            label: 'NDVI',
+                            data: [0.65, 0.62, 0.68, 0.75, 0.82, 0.78, 0.72, 0.68, 0.71, 0.74, 0.69, 0.66],
+                            borderColor: '#10B981',
+                            backgroundColor: 'rgba(16, 185, 129, 0.1)',
+                            borderWidth: 3,
+                            fill: true,
+                            tension: 0.4
+                        },
+                        {
+                            label: 'NDMI',
+                            data: [0.42, 0.38, 0.45, 0.48, 0.52, 0.44, 0.35, 0.28, 0.32, 0.38, 0.41, 0.40],
+                            borderColor: '#3B82F6',
+                            backgroundColor: 'rgba(59, 130, 246, 0.1)',
+                            borderWidth: 3,
+                            fill: true,
+                            tension: 0.4
+                        },
+                        {
+                            label: 'Risk',
+                            data: [25, 32, 22, 18, 15, 28, 42, 55, 48, 35, 28, 30],
+                            borderColor: '#EF4444',
+                            backgroundColor: 'rgba(239, 68, 68, 0.1)',
+                            borderWidth: 2,
+                            fill: false,
+                            tension: 0.4,
+                            yAxisID: 'y1'
+                        }
+                    ]
+                },
+                options: {
+                    responsive: true,
+                    maintainAspectRatio: false,
+                    interaction: {
+                        mode: 'index',
+                        intersect: false
+                    },
+                    plugins: {
+                        legend: { display: false }
+                    },
+                    scales: {
+                        y: {
+                            type: 'linear',
+                            position: 'left',
+                            min: 0,
+                            max: 1,
+                            title: {
+                                display: true,
+                                text: 'İndeks Değeri'
+                            },
+                            grid: { color: 'rgba(0,0,0,0.05)' }
+                        },
+                        y1: {
+                            type: 'linear',
+                            position: 'right',
+                            min: 0,
+                            max: 100,
+                            title: {
+                                display: true,
+                                text: 'Risk %'
+                            },
+                            grid: { display: false }
+                        },
+                        x: {
+                            grid: { display: false }
+                        }
+                    }
+                }
+            });
+
+            // Risk Distribution Chart
+            const rdCtx = document.getElementById('riskDistChart').getContext('2d');
+            new Chart(rdCtx, {
+                type: 'doughnut',
+                data: {
+                    labels: ['Düşük', 'Normal', 'Orta', 'Yüksek', 'Kritik'],
+                    datasets: [{
+                        data: [35, 28, 22, 12, 3],
+                        backgroundColor: [
+                            '#10B981',
+                            '#84cc16',
+                            '#fbbf24',
+                            '#f97316',
+                            '#ef4444'
+                        ],
+                        borderWidth: 0
+                    }]
+                },
+                options: {
+                    responsive: true,
+                    maintainAspectRatio: false,
+                    cutout: '65%',
+                    plugins: {
+                        legend: {
+                            position: 'bottom',
+                            labels: {
+                                usePointStyle: true,
+                                padding: 15
+                            }
+                        }
+                    }
+                }
+            });
+
+            // Field Comparison Chart
+            const fcCtx = document.getElementById('fieldCompareChart').getContext('2d');
+            new Chart(fcCtx, {
+                type: 'bar',
+                data: {
+                    labels: ['Tarla A', 'Tarla B', 'Tarla C'],
+                    datasets: [
+                        {
+                            label: 'NDVI',
+                            data: [0.72, 0.68, 0.75],
+                            backgroundColor: '#10B981',
+                            borderRadius: 6
+                        },
+                        {
+                            label: 'NDMI',
+                            data: [0.38, 0.32, 0.42],
+                            backgroundColor: '#3B82F6',
+                            borderRadius: 6
+                        }
+                    ]
+                },
+                options: {
+                    responsive: true,
+                    maintainAspectRatio: false,
+                    plugins: {
+                        legend: {
+                            position: 'bottom',
+                            labels: {
+                                usePointStyle: true,
+                                padding: 15
+                            }
+                        }
+                    },
+                    scales: {
+                        y: {
+                            beginAtZero: true,
+                            max: 1,
+                            grid: { color: 'rgba(0,0,0,0.05)' }
+                        },
+                        x: {
+                            grid: { display: false }
+                        }
+                    }
+                }
+            });
+        }
+
+        // Load monthly reports
+        function loadMonthlyReports() {
+            loadDemoReports();
+        }
+
+        // Load demo reports
+        function loadDemoReports() {
+            const grid = document.getElementById('reportsGrid');
+            const reports = [
+                { month: 'Ocak 2024', status: 'ready', ndvi: 0.66, risk: 30, trend: 'up' },
+                { month: 'Aralık 2023', status: 'ready', ndvi: 0.69, risk: 28, trend: 'stable' },
+                { month: 'Kasım 2023', status: 'ready', ndvi: 0.74, risk: 35, trend: 'down' },
+                { month: 'Ekim 2023', status: 'ready', ndvi: 0.71, risk: 48, trend: 'down' },
+                { month: 'Eylül 2023', status: 'ready', ndvi: 0.68, risk: 55, trend: 'down' },
+                { month: 'Ağustos 2023', status: 'ready', ndvi: 0.72, risk: 42, trend: 'up' }
+            ];
+
+            grid.innerHTML = reports.map(report => `
+                <div class="report-card">
+                    <div class="report-header">
+                        <span class="report-icon">📄</span>
+                        <div class="report-status ${report.status}">${report.status === 'ready' ? 'Hazır' : 'İşleniyor'}</div>
+                    </div>
+                    <h4 class="report-title">${report.month}</h4>
+                    <div class="report-stats">
+                        <div class="report-stat">
+                            <span class="stat-label">Ort. NDVI</span>
+                            <span class="stat-value">${report.ndvi.toFixed(2)}</span>
+                        </div>
+                        <div class="report-stat">
+                            <span class="stat-label">Risk</span>
+                            <span class="stat-value ${report.risk > 50 ? 'high' : report.risk > 30 ? 'medium' : 'low'}">${report.risk}%</span>
+                        </div>
+                    </div>
+                    <div class="report-trend ${report.trend}">
+                        ${report.trend === 'up' ? '📈 İyileşme' : report.trend === 'down' ? '📉 Kötüleşme' : '➡️ Stabil'}
+                    </div>
+                    <button class="btn-download-report" onclick="downloadReport('${report.month}')">
+                        <span>📥</span> İndir
+                    </button>
+                </div>
+            `).join('');
+        }
+
+        // Download report
+        function downloadReport(month) {
+            alert(`📥 ${month} raporu indiriliyor...\n\nBu özellik yakında aktif olacak.`);
+        }
+
+        // Export all reports
+        function exportAllReports() {
+            alert('📥 Tüm raporlar indiriliyor...\n\nBu özellik yakında aktif olacak.');
+        }
+
+        // Show premium info
+        function showPremiumInfo() {
+            document.getElementById('premiumModal').style.display = 'flex';
+        }
+
+        // Close premium modal
+        function closePremiumModal() {
+            document.getElementById('premiumModal').style.display = 'none';
+        }
+
+        // Filter handlers
+        document.getElementById('fieldFilter').addEventListener('change', function() {
+            // Reload data with filter
+        });
+
+        document.getElementById('periodFilter').addEventListener('change', function() {
+            // Reload data with filter
+        });
+
+        // Init
+        document.addEventListener('DOMContentLoaded', loadReportsData);
+    </script>
+</body>
+</html>

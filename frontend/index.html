@@ -3,7 +3,12 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Tarımsal Kuraklık Takip Sistemi</title>
+    <title>AgriWatch - Tarımsal Kuraklık Takip Sistemi</title>
+    
+    <!-- Google Fonts -->
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Poppins:wght@300;400;500;600;700;800&display=swap" rel="stylesheet">
     
     <!-- Leaflet CSS -->
     <link rel="stylesheet" href="https://unpkg.com/leaflet@1.9.4/dist/leaflet.css" />
@@ -17,93 +22,208 @@
 </head>
 <body>
     <div class="app-container">
-        <!-- Header -->
-        <header class="header">
-            <h1>🌾 Tarımsal Kuraklık Takip Sistemi</h1>
-            <p>Uydu verileriyle tarlanızı uzaktan izleyin</p>
-        </header>
-        
-        <!-- Ana içerik -->
-        <main class="main-content">
-            <!-- Sol panel: Harita -->
-            <section class="map-section">
-                <div class="panel-header">
-                    <h2>📍 Tarla Seçimi</h2>
-                    <div class="toolbar">
-                        <button id="btn-draw" class="btn btn-primary">✏️ Tarla Çiz</button>
-                        <button id="btn-clear" class="btn btn-secondary">🗑️ Temizle</button>
-                    </div>
+        <!-- Sidebar -->
+        <aside class="sidebar">
+            <div class="logo">
+                <div class="logo-icon">🌾</div>
+                <div class="logo-text">
+                    <span class="logo-title">AgriWatch</span>
+                    <span class="logo-subtitle">Kuraklık Takip</span>
                 </div>
-                
-                <!-- Koordinat Arama -->
-                <div class="coordinate-search">
-                    <input type="number" id="input-lat" placeholder="Enlem (Lat)" step="any">
-                    <input type="number" id="input-lng" placeholder="Boylam (Lng)" step="any">
-                    <button id="btn-goto" class="btn btn-small">🔍 Git</button>
-                </div>
-
-                <div id="map"></div>
-                <div class="coordinates-display">
-                    <span id="coords-text">Haritada bir nokta seçin veya tarla çizin</span>
-                </div>
-            </section>
+            </div>
             
-            <!-- Sağ panel: Analiz -->
-            <section class="analysis-section">
-                <!-- Risk kartı -->
-                <div class="card risk-card" id="risk-card">
-                    <h3>⚠️ Risk Durumu</h3>
-                    <div class="risk-indicator" id="risk-indicator">
-                        <div class="risk-level" id="risk-level">-</div>
-                        <div class="risk-score" id="risk-score">Analiz için tarla seçin</div>
-                    </div>
-                    <div class="risk-factors" id="risk-factors"></div>
-                </div>
-                
-                <!-- Güncel değerler -->
-                <div class="card values-card">
-                    <h3>📊 Güncel Değerler</h3>
-                    <div class="values-grid">
-                        <div class="value-item">
-                            <span class="value-label">NDVI</span>
-                            <span class="value-number" id="current-ndvi">-</span>
-                        </div>
-                        <div class="value-item">
-                            <span class="value-label">NDMI</span>
-                            <span class="value-number" id="current-ndmi">-</span>
-                        </div>
-                        <div class="value-item">
-                            <span class="value-label">Tarih</span>
-                            <span class="value-number" id="current-date">-</span>
-                        </div>
-                    </div>
-                </div>
-                
-                <!-- Zaman serisi grafik -->
-                <div class="card chart-card">
-                    <h3>📈 Zaman Serisi</h3>
-                    <div class="chart-container">
-                        <canvas id="timeseries-chart"></canvas>
+            <nav class="sidebar-nav">
+                <a href="dashboard.html" class="nav-item">
+                    <span class="nav-icon">📊</span>
+                    <span class="nav-text">Panel</span>
+                </a>
+                <a href="my-fields.html" class="nav-item">
+                    <span class="nav-icon">🗺️</span>
+                    <span class="nav-text">Tarlalarım</span>
+                </a>
+                <a href="index.html" class="nav-item active">
+                    <span class="nav-icon">🛰️</span>
+                    <span class="nav-text">Harita</span>
+                </a>
+                <a href="reports.html" class="nav-item">
+                    <span class="nav-icon">📈</span>
+                    <span class="nav-text">Raporlar</span>
+                </a>
+            </nav>
+            
+            <div class="sidebar-footer">
+                <a href="#" class="nav-item" onclick="logout()">
+                    <span class="nav-icon">🚪</span>
+                    <span class="nav-text">Çıkış Yap</span>
+                </a>
+                <div class="user-info" id="userInfo">
+                    <div class="user-avatar">👤</div>
+                    <div class="user-details">
+                        <span class="user-name" id="userName">Kullanıcı</span>
+                        <span class="user-role" id="userRole">Çiftçi</span>
                     </div>
                 </div>
-                
-                <!-- Analiz butonu -->
-                <button id="btn-analyze" class="btn btn-large btn-primary" disabled>
-                    🔍 Analiz Et
-                </button>
-            </section>
+            </div>
+        </aside>
+
+        <!-- Main Content -->
+        <main class="main-wrapper">
+            <!-- Top Bar -->
+            <header class="topbar">
+                <div class="topbar-left">
+                    <h1 class="page-title">Tarla Analizi</h1>
+                    <p class="page-subtitle">Uydu verileriyle tarlanızı uzaktan izleyin</p>
+                </div>
+                <div class="topbar-right">
+                    <div class="search-box">
+                        <input type="text" id="input-dms" placeholder="Koordinat yapıştır (37°55'34.5&quot;N 29°56'33.1&quot;E)">
+                        <button class="search-btn" id="btn-search-dms">🔍</button>
+                    </div>
+                </div>
+            </header>
+
+            <!-- Content Area -->
+            <div class="content-area">
+                <!-- Map Section -->
+                <section class="map-container">
+                    <!-- Map Controls -->
+                    <div class="map-controls">
+                        <div class="control-group">
+                            <button id="btn-draw" class="control-btn primary">
+                                <span>✏️</span> Tarla Çiz
+                            </button>
+                            <button id="btn-clear" class="control-btn">
+                                <span>🗑️</span> Temizle
+                            </button>
+                        </div>
+                        <div class="control-group coordinates-input">
+                            <input type="number" id="input-lat" placeholder="Enlem" step="any">
+                            <input type="number" id="input-lng" placeholder="Boylam" step="any">
+                            <button id="btn-goto" class="control-btn primary">Git</button>
+                        </div>
+                    </div>
+                    
+                    <!-- The Map -->
+                    <div id="map"></div>
+                    
+                    <!-- Map Info Badge -->
+                    <div class="map-info-badge">
+                        <span id="coords-text">📍 Haritada bir nokta seçin veya tarla çizin</span>
+                    </div>
+                </section>
+
+                <!-- Analysis Panel -->
+                <aside class="analysis-panel">
+                    <!-- Risk Card -->
+                    <div class="card risk-card">
+                        <div class="card-header">
+                            <h3>⚠️ Risk Durumu</h3>
+                        </div>
+                        <div class="card-body">
+                            <div class="risk-display">
+                                <div class="risk-circle" id="risk-indicator">
+                                    <span class="risk-value" id="risk-level">-</span>
+                                </div>
+                                <p class="risk-label" id="risk-score">Analiz için tarla seçin</p>
+                            </div>
+                            <div class="risk-factors" id="risk-factors"></div>
+                        </div>
+                    </div>
+
+                    <!-- Stats Cards -->
+                    <div class="stats-grid">
+                        <div class="stat-card ndvi">
+                            <div class="stat-icon">🌿</div>
+                            <div class="stat-info">
+                                <span class="stat-value" id="current-ndvi">-</span>
+                                <span class="stat-label">NDVI</span>
+                            </div>
+                        </div>
+                        <div class="stat-card ndmi">
+                            <div class="stat-icon">💧</div>
+                            <div class="stat-info">
+                                <span class="stat-value" id="current-ndmi">-</span>
+                                <span class="stat-label">NDMI</span>
+                            </div>
+                        </div>
+                        <div class="stat-card date">
+                            <div class="stat-icon">📅</div>
+                            <div class="stat-info">
+                                <span class="stat-value" id="current-date">-</span>
+                                <span class="stat-label">Tarih</span>
+                            </div>
+                        </div>
+                    </div>
+
+                    <!-- Chart Card -->
+                    <div class="card chart-card">
+                        <div class="card-header">
+                            <h3>📈 Zaman Serisi</h3>
+                        </div>
+                        <div class="card-body">
+                            <div class="chart-wrapper">
+                                <canvas id="timeseries-chart"></canvas>
+                            </div>
+                        </div>
+                    </div>
+
+                    <!-- Analyze Button -->
+                    <button id="btn-analyze" class="analyze-btn" disabled>
+                        <span class="btn-icon">🔍</span>
+                        <span class="btn-text">Analiz Et</span>
+                    </button>
+                </aside>
+            </div>
         </main>
-        
-        <!-- Loading overlay -->
-        <div class="loading-overlay" id="loading">
-            <div class="spinner"></div>
-            <p>Veriler yükleniyor...</p>
+    </div>
+
+    <!-- Loading Overlay -->
+    <div class="loading-overlay" id="loading">
+        <div class="loader">
+            <div class="loader-spinner"></div>
+            <p class="loader-text">Veriler yükleniyor...</p>
         </div>
     </div>
-    
+
     <!-- Scripts -->
     <script src="https://unpkg.com/leaflet@1.9.4/dist/leaflet.js"></script>
     <script src="https://unpkg.com/leaflet-draw@1.0.4/dist/leaflet.draw.js"></script>
+    <script>
+        // Auth check
+        function checkAuth() {
+            const token = localStorage.getItem('token');
+            if (!token) {
+                window.location.href = 'login.html';
+                return false;
+            }
+            return true;
+        }
+
+        // Logout function
+        function logout() {
+            localStorage.removeItem('token');
+            localStorage.removeItem('user');
+            window.location.href = 'login.html';
+        }
+
+        // Update user info
+        function updateUserInfo() {
+            const user = JSON.parse(localStorage.getItem('user') || '{}');
+            if (user.username) {
+                document.getElementById('userName').textContent = user.username;
+            }
+            if (user.subscription_type) {
+                document.getElementById('userRole').textContent = 
+                    user.subscription_type === 'premium' ? '⭐ Premium' : 'Ücretsiz Plan';
+            }
+        }
+
+        // Run auth check on load
+        if (!checkAuth()) {
+            throw new Error('Not authenticated');
+        }
+        updateUserInfo();
+    </script>
     <script src="js/api.js"></script>
     <script src="js/map.js"></script>
     <script src="js/charts.js"></script>

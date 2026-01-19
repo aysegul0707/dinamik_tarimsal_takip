@@ -1,0 +1,791 @@
+<!DOCTYPE html>
+<html lang="tr">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Tarla Detayı - Kuraklık Analiz Sistemi</title>
+    <link rel="stylesheet" href="css/style.css">
+    <link rel="stylesheet" href="css/dashboard.css">
+    <link rel="stylesheet" href="css/field-detail.css">
+    <link rel="stylesheet" href="https://unpkg.com/leaflet@1.9.4/dist/leaflet.css">
+    <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+</head>
+<body>
+    <!-- Sidebar -->
+    <aside class="sidebar">
+        <div class="sidebar-header">
+            <span class="sidebar-logo">🌾</span>
+            <h1 class="sidebar-title">AgriDrought</h1>
+        </div>
+        
+        <nav class="sidebar-nav">
+            <a href="dashboard.html" class="nav-item">
+                <span class="nav-icon">📊</span>
+                <span class="nav-label">Panel</span>
+            </a>
+            <a href="my-fields.html" class="nav-item active">
+                <span class="nav-icon">🗺️</span>
+                <span class="nav-label">Tarlalarım</span>
+            </a>
+            <a href="index.html" class="nav-item">
+                <span class="nav-icon">🛰️</span>
+                <span class="nav-label">Harita</span>
+            </a>
+            <a href="reports.html" class="nav-item">
+                <span class="nav-icon">📈</span>
+                <span class="nav-label">Raporlar</span>
+            </a>
+        </nav>
+        
+        <div class="sidebar-footer">
+            <a href="#" class="nav-item" onclick="logout()">
+                <span class="nav-icon">🚪</span>
+                <span class="nav-label">Çıkış Yap</span>
+            </a>
+        </div>
+    </aside>
+
+    <!-- Main Content -->
+    <main class="main-content">
+        <!-- Topbar -->
+        <header class="topbar">
+            <div class="topbar-left">
+                <a href="my-fields.html" class="back-link">
+                    <span>←</span> Tarlalarıma Dön
+                </a>
+            </div>
+            <div class="topbar-right">
+                <button class="btn-analyze" onclick="runAnalysis()">
+                    <span>🔍</span> Yeni Analiz
+                </button>
+                <button class="btn-export" onclick="exportReport()">
+                    <span>📥</span> Rapor İndir
+                </button>
+            </div>
+        </header>
+
+        <!-- Field Detail Content -->
+        <div class="field-detail-content">
+            <!-- Field Header -->
+            <div class="field-header-card">
+                <div class="field-header-info">
+                    <h1 class="field-title" id="fieldName">Tarla Yükleniyor...</h1>
+                    <div class="field-meta">
+                        <span class="meta-item">
+                            <span class="meta-icon">📍</span>
+                            <span id="fieldLocation">Konum yükleniyor...</span>
+                        </span>
+                        <span class="meta-item">
+                            <span class="meta-icon">📐</span>
+                            <span id="fieldArea">Alan hesaplanıyor...</span>
+                        </span>
+                        <span class="meta-item">
+                            <span class="meta-icon">📅</span>
+                            <span id="fieldDate">Tarih yükleniyor...</span>
+                        </span>
+                    </div>
+                </div>
+                <div class="field-header-status">
+                    <div class="status-badge" id="fieldStatus">
+                        <span class="status-icon">●</span>
+                        <span class="status-text">Durum</span>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Risk Overview -->
+            <div class="detail-grid">
+                <!-- Risk Gauge -->
+                <div class="detail-card risk-card">
+                    <div class="card-header">
+                        <h3>🎯 Kuraklık Risk Seviyesi</h3>
+                        <span class="update-time" id="riskUpdateTime">Son güncelleme: --</span>
+                    </div>
+                    <div class="risk-gauge-container">
+                        <div class="risk-gauge">
+                            <svg viewBox="0 0 200 120" class="gauge-svg">
+                                <defs>
+                                    <linearGradient id="gaugeGradient" x1="0%" y1="0%" x2="100%" y2="0%">
+                                        <stop offset="0%" style="stop-color:#10B981"/>
+                                        <stop offset="25%" style="stop-color:#84cc16"/>
+                                        <stop offset="50%" style="stop-color:#fbbf24"/>
+                                        <stop offset="75%" style="stop-color:#f97316"/>
+                                        <stop offset="100%" style="stop-color:#ef4444"/>
+                                    </linearGradient>
+                                </defs>
+                                <!-- Background arc -->
+                                <path d="M 20 100 A 80 80 0 0 1 180 100" 
+                                      fill="none" 
+                                      stroke="#e5e7eb" 
+                                      stroke-width="15"
+                                      stroke-linecap="round"/>
+                                <!-- Value arc -->
+                                <path id="gaugeArc"
+                                      d="M 20 100 A 80 80 0 0 1 180 100" 
+                                      fill="none" 
+                                      stroke="url(#gaugeGradient)" 
+                                      stroke-width="15"
+                                      stroke-linecap="round"
+                                      stroke-dasharray="251.2"
+                                      stroke-dashoffset="251.2"/>
+                                <!-- Needle -->
+                                <line id="gaugeNeedle" 
+                                      x1="100" y1="100" x2="100" y2="30" 
+                                      stroke="#1e293b" 
+                                      stroke-width="3"
+                                      stroke-linecap="round"
+                                      transform="rotate(-90, 100, 100)"/>
+                                <circle cx="100" cy="100" r="8" fill="#1e293b"/>
+                            </svg>
+                        </div>
+                        <div class="risk-value-display">
+                            <span class="risk-value" id="riskValue">--</span>
+                            <span class="risk-label" id="riskLabel">Hesaplanıyor</span>
+                        </div>
+                    </div>
+                    <div class="risk-legend">
+                        <div class="legend-item">
+                            <span class="legend-color" style="background: #10B981"></span>
+                            <span>Düşük (0-20)</span>
+                        </div>
+                        <div class="legend-item">
+                            <span class="legend-color" style="background: #84cc16"></span>
+                            <span>Normal (20-40)</span>
+                        </div>
+                        <div class="legend-item">
+                            <span class="legend-color" style="background: #fbbf24"></span>
+                            <span>Orta (40-60)</span>
+                        </div>
+                        <div class="legend-item">
+                            <span class="legend-color" style="background: #f97316"></span>
+                            <span>Yüksek (60-80)</span>
+                        </div>
+                        <div class="legend-item">
+                            <span class="legend-color" style="background: #ef4444"></span>
+                            <span>Kritik (80-100)</span>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Mini Map -->
+                <div class="detail-card map-card">
+                    <div class="card-header">
+                        <h3>🗺️ Tarla Konumu</h3>
+                        <a href="index.html" class="btn-map-link">Haritada Aç →</a>
+                    </div>
+                    <div id="miniMap" class="mini-map"></div>
+                </div>
+            </div>
+
+            <!-- Indices Section -->
+            <div class="indices-section">
+                <div class="section-header">
+                    <h2>📊 Vejetasyon İndeksleri</h2>
+                    <div class="date-range-selector">
+                        <button class="range-btn active" data-range="week">Hafta</button>
+                        <button class="range-btn" data-range="month">Ay</button>
+                        <button class="range-btn" data-range="quarter">3 Ay</button>
+                        <button class="range-btn" data-range="year">Yıl</button>
+                    </div>
+                </div>
+
+                <div class="indices-grid">
+                    <!-- NDVI Card -->
+                    <div class="index-card ndvi-card">
+                        <div class="index-header">
+                            <div class="index-info">
+                                <h3>🌿 NDVI</h3>
+                                <p>Normalize Edilmiş Fark Vejetasyon İndeksi</p>
+                            </div>
+                            <div class="index-current">
+                                <span class="current-value" id="ndviValue">--</span>
+                                <span class="current-change positive" id="ndviChange">--</span>
+                            </div>
+                        </div>
+                        <div class="chart-container">
+                            <canvas id="ndviChart"></canvas>
+                        </div>
+                        <div class="index-footer">
+                            <div class="index-stat">
+                                <span class="stat-label">Min</span>
+                                <span class="stat-value" id="ndviMin">--</span>
+                            </div>
+                            <div class="index-stat">
+                                <span class="stat-label">Ort</span>
+                                <span class="stat-value" id="ndviAvg">--</span>
+                            </div>
+                            <div class="index-stat">
+                                <span class="stat-label">Max</span>
+                                <span class="stat-value" id="ndviMax">--</span>
+                            </div>
+                        </div>
+                    </div>
+
+                    <!-- NDMI Card -->
+                    <div class="index-card ndmi-card">
+                        <div class="index-header">
+                            <div class="index-info">
+                                <h3>💧 NDMI</h3>
+                                <p>Normalize Edilmiş Fark Nem İndeksi</p>
+                            </div>
+                            <div class="index-current">
+                                <span class="current-value" id="ndmiValue">--</span>
+                                <span class="current-change negative" id="ndmiChange">--</span>
+                            </div>
+                        </div>
+                        <div class="chart-container">
+                            <canvas id="ndmiChart"></canvas>
+                        </div>
+                        <div class="index-footer">
+                            <div class="index-stat">
+                                <span class="stat-label">Min</span>
+                                <span class="stat-value" id="ndmiMin">--</span>
+                            </div>
+                            <div class="index-stat">
+                                <span class="stat-label">Ort</span>
+                                <span class="stat-value" id="ndmiAvg">--</span>
+                            </div>
+                            <div class="index-stat">
+                                <span class="stat-label">Max</span>
+                                <span class="stat-value" id="ndmiMax">--</span>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Satellite Images Section -->
+            <div class="satellite-section">
+                <div class="section-header">
+                    <h2>🛰️ Uydu Görüntüleri</h2>
+                    <select id="imageDate" class="date-select">
+                        <option value="">Tarih seçin...</option>
+                    </select>
+                </div>
+
+                <div class="satellite-grid">
+                    <div class="satellite-card">
+                        <div class="satellite-header">
+                            <h4>RGB (Gerçek Renk)</h4>
+                        </div>
+                        <div class="satellite-image" id="rgbImage">
+                            <div class="image-placeholder">
+                                <span>🛰️</span>
+                                <p>Görüntü yükleniyor...</p>
+                            </div>
+                        </div>
+                    </div>
+
+                    <div class="satellite-card">
+                        <div class="satellite-header">
+                            <h4>NDVI Haritası</h4>
+                        </div>
+                        <div class="satellite-image" id="ndviImage">
+                            <div class="image-placeholder">
+                                <span>🌿</span>
+                                <p>Görüntü yükleniyor...</p>
+                            </div>
+                        </div>
+                    </div>
+
+                    <div class="satellite-card">
+                        <div class="satellite-header">
+                            <h4>NDMI Haritası</h4>
+                        </div>
+                        <div class="satellite-image" id="ndmiImage">
+                            <div class="image-placeholder">
+                                <span>💧</span>
+                                <p>Görüntü yükleniyor...</p>
+                            </div>
+                        </div>
+                    </div>
+
+                    <div class="satellite-card">
+                        <div class="satellite-header">
+                            <h4>Risk Haritası</h4>
+                        </div>
+                        <div class="satellite-image" id="riskImage">
+                            <div class="image-placeholder">
+                                <span>⚠️</span>
+                                <p>Görüntü yükleniyor...</p>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Analysis History -->
+            <div class="history-section">
+                <div class="section-header">
+                    <h2>📋 Analiz Geçmişi</h2>
+                </div>
+
+                <div class="history-table-container">
+                    <table class="history-table">
+                        <thead>
+                            <tr>
+                                <th>Tarih</th>
+                                <th>NDVI</th>
+                                <th>NDMI</th>
+                                <th>Risk</th>
+                                <th>Durum</th>
+                                <th>Detay</th>
+                            </tr>
+                        </thead>
+                        <tbody id="historyTableBody">
+                            <tr>
+                                <td colspan="6" class="loading-cell">
+                                    <div class="loading-spinner"></div>
+                                    Geçmiş yükleniyor...
+                                </td>
+                            </tr>
+                        </tbody>
+                    </table>
+                </div>
+            </div>
+
+            <!-- Recommendations -->
+            <div class="recommendations-section">
+                <div class="section-header">
+                    <h2>💡 Öneriler</h2>
+                </div>
+
+                <div class="recommendations-grid" id="recommendationsGrid">
+                    <div class="recommendation-card">
+                        <div class="rec-icon">💧</div>
+                        <h4>Sulama Önerisi</h4>
+                        <p>Mevcut nem seviyesi yeterli görünüyor. Normal sulama programına devam edin.</p>
+                    </div>
+                    <div class="recommendation-card warning">
+                        <div class="rec-icon">🌡️</div>
+                        <h4>Sıcaklık Uyarısı</h4>
+                        <p>Önümüzdeki hafta yüksek sıcaklık bekleniyor. Ek sulama planlaması yapın.</p>
+                    </div>
+                    <div class="recommendation-card">
+                        <div class="rec-icon">🌾</div>
+                        <h4>Vejetasyon Durumu</h4>
+                        <p>Bitki örtüsü sağlıklı görünüyor. Mevcut bakım programına devam edin.</p>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </main>
+
+    <!-- Analysis Modal -->
+    <div class="modal" id="analysisModal">
+        <div class="modal-overlay" onclick="closeAnalysisModal()"></div>
+        <div class="modal-card">
+            <div class="modal-header">
+                <h3>🔍 Yeni Analiz Başlatılıyor</h3>
+                <button class="modal-close" onclick="closeAnalysisModal()">×</button>
+            </div>
+            <div class="modal-body">
+                <div class="analysis-progress">
+                    <div class="progress-step active" id="step1">
+                        <div class="step-icon">🛰️</div>
+                        <span>Uydu verisi alınıyor...</span>
+                    </div>
+                    <div class="progress-step" id="step2">
+                        <div class="step-icon">🧮</div>
+                        <span>İndeksler hesaplanıyor...</span>
+                    </div>
+                    <div class="progress-step" id="step3">
+                        <div class="step-icon">🤖</div>
+                        <span>ML modeli çalıştırılıyor...</span>
+                    </div>
+                    <div class="progress-step" id="step4">
+                        <div class="step-icon">✅</div>
+                        <span>Analiz tamamlandı!</span>
+                    </div>
+                </div>
+                <div class="progress-bar-container">
+                    <div class="progress-bar">
+                        <div class="progress-fill" id="analysisFill"></div>
+                    </div>
+                    <span class="progress-percent" id="analysisPercent">0%</span>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <script src="https://unpkg.com/leaflet@1.9.4/dist/leaflet.js"></script>
+    <script>
+        const API_BASE = 'http://localhost:5000/api';
+        let fieldId = null;
+        let miniMap = null;
+        let ndviChart = null;
+        let ndmiChart = null;
+
+        // Get field ID from URL
+        function getFieldIdFromUrl() {
+            const params = new URLSearchParams(window.location.search);
+            return params.get('id');
+        }
+
+        // Check auth
+        function checkAuth() {
+            const token = localStorage.getItem('token');
+            if (!token) {
+                window.location.href = 'login.html';
+                return null;
+            }
+            return token;
+        }
+
+        // Logout
+        function logout() {
+            localStorage.removeItem('token');
+            localStorage.removeItem('user');
+            window.location.href = 'login.html';
+        }
+
+        // Format date
+        function formatDate(dateStr) {
+            const date = new Date(dateStr);
+            return date.toLocaleDateString('tr-TR', {
+                day: 'numeric',
+                month: 'long',
+                year: 'numeric'
+            });
+        }
+
+        // Load field data
+        async function loadFieldData() {
+            const token = checkAuth();
+            if (!token) return;
+
+            fieldId = getFieldIdFromUrl();
+            if (!fieldId) {
+                alert('Tarla ID bulunamadı!');
+                window.location.href = 'my-fields.html';
+                return;
+            }
+
+            try {
+                const response = await fetch(`${API_BASE}/fields/${fieldId}`, {
+                    headers: {
+                        'Authorization': `Bearer ${token}`
+                    }
+                });
+
+                if (!response.ok) {
+                    throw new Error('Tarla yüklenemedi');
+                }
+
+                const field = await response.json();
+                displayFieldData(field);
+                initMiniMap(field.coordinates);
+                loadAnalysisData();
+            } catch (error) {
+                console.error('Error:', error);
+                // Demo data for testing
+                displayDemoData();
+            }
+        }
+
+        // Display field data
+        function displayFieldData(field) {
+            document.getElementById('fieldName').textContent = field.name;
+            document.getElementById('fieldLocation').textContent = field.location || 'Konum belirtilmemiş';
+            document.getElementById('fieldArea').textContent = field.area ? `${field.area} hektar` : 'Alan hesaplanıyor';
+            document.getElementById('fieldDate').textContent = formatDate(field.created_at);
+
+            // Status badge
+            const statusBadge = document.getElementById('fieldStatus');
+            statusBadge.className = 'status-badge ' + (field.status || 'active');
+            statusBadge.querySelector('.status-text').textContent = 
+                field.status === 'alert' ? 'Dikkat' : 
+                field.status === 'pending' ? 'Bekliyor' : 'Aktif';
+        }
+
+        // Display demo data
+        function displayDemoData() {
+            document.getElementById('fieldName').textContent = 'Demo Tarla';
+            document.getElementById('fieldLocation').textContent = 'Konya, Türkiye';
+            document.getElementById('fieldArea').textContent = '25.5 hektar';
+            document.getElementById('fieldDate').textContent = formatDate(new Date());
+            
+            // Demo risk
+            updateRiskGauge(42);
+            
+            // Demo charts
+            initCharts([0.72, 0.68, 0.75, 0.71, 0.69, 0.73, 0.70], 
+                       [0.35, 0.32, 0.38, 0.34, 0.31, 0.36, 0.33]);
+            
+            // Update indices display
+            document.getElementById('ndviValue').textContent = '0.70';
+            document.getElementById('ndviChange').textContent = '+2.1%';
+            document.getElementById('ndviMin').textContent = '0.68';
+            document.getElementById('ndviAvg').textContent = '0.71';
+            document.getElementById('ndviMax').textContent = '0.75';
+            
+            document.getElementById('ndmiValue').textContent = '0.33';
+            document.getElementById('ndmiChange').textContent = '-1.5%';
+            document.getElementById('ndmiChange').className = 'current-change negative';
+            document.getElementById('ndmiMin').textContent = '0.31';
+            document.getElementById('ndmiAvg').textContent = '0.34';
+            document.getElementById('ndmiMax').textContent = '0.38';
+
+            // Init map with demo coords
+            initMiniMap([[37.8, 32.4], [37.81, 32.4], [37.81, 32.41], [37.8, 32.41]]);
+
+            // Demo history
+            displayDemoHistory();
+        }
+
+        // Display demo history
+        function displayDemoHistory() {
+            const tbody = document.getElementById('historyTableBody');
+            const demoData = [
+                { date: '2024-01-15', ndvi: 0.72, ndmi: 0.35, risk: 38, status: 'normal' },
+                { date: '2024-01-08', ndvi: 0.68, ndmi: 0.32, risk: 45, status: 'warning' },
+                { date: '2024-01-01', ndvi: 0.75, ndmi: 0.38, risk: 32, status: 'normal' },
+                { date: '2023-12-25', ndvi: 0.71, ndmi: 0.34, risk: 41, status: 'normal' },
+                { date: '2023-12-18', ndvi: 0.69, ndmi: 0.31, risk: 48, status: 'warning' }
+            ];
+
+            tbody.innerHTML = demoData.map(item => `
+                <tr>
+                    <td>${formatDate(item.date)}</td>
+                    <td><span class="value-badge ndvi">${item.ndvi.toFixed(2)}</span></td>
+                    <td><span class="value-badge ndmi">${item.ndmi.toFixed(2)}</span></td>
+                    <td><span class="value-badge risk ${item.risk > 60 ? 'high' : item.risk > 40 ? 'medium' : 'low'}">${item.risk}%</span></td>
+                    <td><span class="status-pill ${item.status}">${item.status === 'warning' ? 'Uyarı' : 'Normal'}</span></td>
+                    <td><button class="btn-details" onclick="viewDetails('${item.date}')">Detay</button></td>
+                </tr>
+            `).join('');
+        }
+
+        // Update risk gauge
+        function updateRiskGauge(risk) {
+            const arc = document.getElementById('gaugeArc');
+            const needle = document.getElementById('gaugeNeedle');
+            const riskValue = document.getElementById('riskValue');
+            const riskLabel = document.getElementById('riskLabel');
+
+            // Calculate arc offset (251.2 is full arc length)
+            const offset = 251.2 - (251.2 * (risk / 100));
+            arc.style.strokeDashoffset = offset;
+
+            // Calculate needle rotation (-90 to 90 degrees)
+            const rotation = -90 + (180 * (risk / 100));
+            needle.setAttribute('transform', `rotate(${rotation}, 100, 100)`);
+
+            // Update value
+            riskValue.textContent = risk + '%';
+
+            // Update label
+            if (risk < 20) {
+                riskLabel.textContent = 'Düşük Risk';
+                riskLabel.style.color = '#10B981';
+            } else if (risk < 40) {
+                riskLabel.textContent = 'Normal';
+                riskLabel.style.color = '#84cc16';
+            } else if (risk < 60) {
+                riskLabel.textContent = 'Orta Risk';
+                riskLabel.style.color = '#fbbf24';
+            } else if (risk < 80) {
+                riskLabel.textContent = 'Yüksek Risk';
+                riskLabel.style.color = '#f97316';
+            } else {
+                riskLabel.textContent = 'Kritik!';
+                riskLabel.style.color = '#ef4444';
+            }
+
+            document.getElementById('riskUpdateTime').textContent = 
+                'Son güncelleme: ' + new Date().toLocaleTimeString('tr-TR');
+        }
+
+        // Init mini map
+        function initMiniMap(coordinates) {
+            if (miniMap) {
+                miniMap.remove();
+            }
+
+            miniMap = L.map('miniMap', {
+                zoomControl: false,
+                attributionControl: false
+            });
+
+            L.tileLayer('https://server.arcgisonline.com/ArcGIS/rest/services/World_Imagery/MapServer/tile/{z}/{y}/{x}', {
+                maxZoom: 19
+            }).addTo(miniMap);
+
+            if (coordinates && coordinates.length > 0) {
+                const polygon = L.polygon(coordinates, {
+                    color: '#10B981',
+                    weight: 3,
+                    fillColor: '#10B981',
+                    fillOpacity: 0.3
+                }).addTo(miniMap);
+
+                miniMap.fitBounds(polygon.getBounds(), { padding: [20, 20] });
+            } else {
+                miniMap.setView([39, 35], 6);
+            }
+        }
+
+        // Init charts
+        function initCharts(ndviData, ndmiData) {
+            const labels = ['7 gün önce', '6 gün önce', '5 gün önce', '4 gün önce', '3 gün önce', '2 gün önce', 'Bugün'];
+
+            // NDVI Chart
+            const ndviCtx = document.getElementById('ndviChart').getContext('2d');
+            if (ndviChart) ndviChart.destroy();
+            ndviChart = new Chart(ndviCtx, {
+                type: 'line',
+                data: {
+                    labels: labels,
+                    datasets: [{
+                        label: 'NDVI',
+                        data: ndviData,
+                        borderColor: '#10B981',
+                        backgroundColor: 'rgba(16, 185, 129, 0.1)',
+                        borderWidth: 3,
+                        fill: true,
+                        tension: 0.4,
+                        pointRadius: 4,
+                        pointBackgroundColor: '#10B981'
+                    }]
+                },
+                options: {
+                    responsive: true,
+                    maintainAspectRatio: false,
+                    plugins: {
+                        legend: { display: false }
+                    },
+                    scales: {
+                        y: {
+                            min: 0,
+                            max: 1,
+                            grid: { color: 'rgba(0,0,0,0.05)' }
+                        },
+                        x: {
+                            grid: { display: false }
+                        }
+                    }
+                }
+            });
+
+            // NDMI Chart
+            const ndmiCtx = document.getElementById('ndmiChart').getContext('2d');
+            if (ndmiChart) ndmiChart.destroy();
+            ndmiChart = new Chart(ndmiCtx, {
+                type: 'line',
+                data: {
+                    labels: labels,
+                    datasets: [{
+                        label: 'NDMI',
+                        data: ndmiData,
+                        borderColor: '#3B82F6',
+                        backgroundColor: 'rgba(59, 130, 246, 0.1)',
+                        borderWidth: 3,
+                        fill: true,
+                        tension: 0.4,
+                        pointRadius: 4,
+                        pointBackgroundColor: '#3B82F6'
+                    }]
+                },
+                options: {
+                    responsive: true,
+                    maintainAspectRatio: false,
+                    plugins: {
+                        legend: { display: false }
+                    },
+                    scales: {
+                        y: {
+                            min: 0,
+                            max: 1,
+                            grid: { color: 'rgba(0,0,0,0.05)' }
+                        },
+                        x: {
+                            grid: { display: false }
+                        }
+                    }
+                }
+            });
+        }
+
+        // Load analysis data
+        async function loadAnalysisData() {
+            const token = checkAuth();
+            try {
+                const response = await fetch(`${API_BASE}/analysis/field/${fieldId}`, {
+                    headers: {
+                        'Authorization': `Bearer ${token}`
+                    }
+                });
+
+                if (response.ok) {
+                    const data = await response.json();
+                    if (data.length > 0) {
+                        // Process analysis data
+                        const latest = data[0];
+                        updateRiskGauge(latest.drought_risk || 42);
+                        // Update other displays...
+                    }
+                }
+            } catch (error) {
+                console.error('Analysis data error:', error);
+            }
+        }
+
+        // Run new analysis
+        function runAnalysis() {
+            const modal = document.getElementById('analysisModal');
+            modal.style.display = 'flex';
+
+            let progress = 0;
+            const fill = document.getElementById('analysisFill');
+            const percent = document.getElementById('analysisPercent');
+            const steps = ['step1', 'step2', 'step3', 'step4'];
+
+            const interval = setInterval(() => {
+                progress += 2;
+                fill.style.width = progress + '%';
+                percent.textContent = progress + '%';
+
+                // Update steps
+                if (progress >= 25) document.getElementById('step1').classList.add('completed');
+                if (progress >= 50) document.getElementById('step2').classList.add('active', 'completed');
+                if (progress >= 75) document.getElementById('step3').classList.add('active', 'completed');
+                if (progress >= 100) {
+                    document.getElementById('step4').classList.add('active', 'completed');
+                    clearInterval(interval);
+                    setTimeout(() => {
+                        closeAnalysisModal();
+                        location.reload();
+                    }, 1000);
+                }
+            }, 100);
+        }
+
+        // Close analysis modal
+        function closeAnalysisModal() {
+            document.getElementById('analysisModal').style.display = 'none';
+        }
+
+        // Export report
+        function exportReport() {
+            alert('📥 Rapor PDF olarak indiriliyor...\n\nBu özellik yakında aktif olacak.');
+        }
+
+        // View details
+        function viewDetails(date) {
+            alert('📋 ' + date + ' tarihli detaylı analiz görüntüleniyor...');
+        }
+
+        // Date range selector
+        document.querySelectorAll('.range-btn').forEach(btn => {
+            btn.addEventListener('click', function() {
+                document.querySelectorAll('.range-btn').forEach(b => b.classList.remove('active'));
+                this.classList.add('active');
+                // Load data for selected range
+            });
+        });
+
+        // Init
+        document.addEventListener('DOMContentLoaded', loadFieldData);
+    </script>
+</body>
+</html>

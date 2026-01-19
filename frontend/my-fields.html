@@ -1,0 +1,346 @@
+<!DOCTYPE html>
+<html lang="tr">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Tarlalarım - AgriWatch</title>
+    
+    <!-- Google Fonts -->
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Poppins:wght@300;400;500;600;700;800&display=swap" rel="stylesheet">
+    
+    <link rel="stylesheet" href="css/style.css">
+    <link rel="stylesheet" href="css/dashboard.css">
+    <link rel="stylesheet" href="css/fields.css">
+</head>
+<body>
+    <div class="app-container">
+        <!-- Sidebar -->
+        <aside class="sidebar">
+            <div class="logo">
+                <div class="logo-icon">🌾</div>
+                <div class="logo-text">
+                    <span class="logo-title">AgriWatch</span>
+                    <span class="logo-subtitle">Kuraklık Takip</span>
+                </div>
+            </div>
+            
+            <nav class="sidebar-nav">
+                <a href="dashboard.html" class="nav-item">
+                    <span class="nav-icon">🏠</span>
+                    <span class="nav-text">Panel</span>
+                </a>
+                <a href="index.html" class="nav-item">
+                    <span class="nav-icon">🗺️</span>
+                    <span class="nav-text">Harita</span>
+                </a>
+                <a href="my-fields.html" class="nav-item active">
+                    <span class="nav-icon">🌾</span>
+                    <span class="nav-text">Tarlalarım</span>
+                </a>
+                <a href="reports.html" class="nav-item">
+                    <span class="nav-icon">📈</span>
+                    <span class="nav-text">Raporlar</span>
+                </a>
+                <a href="#" class="nav-item" onclick="logout()">
+                    <span class="nav-icon">🚪</span>
+                    <span class="nav-text">Çıkış</span>
+                </a>
+            </nav>
+            
+            <div class="sidebar-footer">
+                <div class="user-info">
+                    <div class="user-avatar" id="user-avatar">👤</div>
+                    <div class="user-details">
+                        <span class="user-name" id="user-name">Kullanıcı</span>
+                        <span class="user-role" id="user-role">Ücretsiz Plan</span>
+                    </div>
+                </div>
+            </div>
+        </aside>
+
+        <!-- Main Content -->
+        <main class="main-wrapper">
+            <!-- Top Bar -->
+            <header class="topbar">
+                <div class="topbar-left">
+                    <h1 class="page-title">Tarlalarım</h1>
+                    <p class="page-subtitle">Tüm tarlalarınızı yönetin</p>
+                </div>
+                <div class="topbar-right">
+                    <div class="field-counter" id="field-counter">
+                        <span class="counter-current">0</span>
+                        <span class="counter-divider">/</span>
+                        <span class="counter-max">3</span>
+                        <span class="counter-label">Tarla</span>
+                    </div>
+                    <a href="index.html" class="btn-add-field">
+                        <span>+</span> Yeni Tarla
+                    </a>
+                </div>
+            </header>
+
+            <!-- Fields Content -->
+            <div class="fields-content">
+                <!-- Loading State -->
+                <div class="loading-state" id="loading-state">
+                    <div class="loading-spinner"></div>
+                    <p>Tarlalar yükleniyor...</p>
+                </div>
+
+                <!-- Empty State -->
+                <div class="empty-state" id="empty-state" style="display: none;">
+                    <div class="empty-icon">🌱</div>
+                    <h3>Henüz tarla eklemediniz</h3>
+                    <p>Haritadan tarla çizerek başlayın ve uydu takibine başlayın</p>
+                    <a href="index.html" class="btn-primary">🗺️ Haritaya Git</a>
+                </div>
+
+                <!-- Fields Grid -->
+                <div class="fields-grid" id="fields-grid">
+                    <!-- Dinamik olarak doldurulacak -->
+                </div>
+            </div>
+        </main>
+    </div>
+
+    <!-- Limit Warning Modal -->
+    <div class="modal-overlay" id="limit-modal">
+        <div class="modal-card limit-modal-card">
+            <button class="modal-close" onclick="closeLimitModal()">×</button>
+            <div class="modal-header">
+                <div class="modal-icon">🔒</div>
+                <h2>Tarla Limitine Ulaştınız</h2>
+                <p>Ücretsiz planda en fazla 3 tarla ekleyebilirsiniz</p>
+            </div>
+            
+            <div class="modal-body">
+                <div class="limit-info">
+                    <div class="limit-current">
+                        <span class="limit-number">3</span>
+                        <span class="limit-text">/ 3 Tarla</span>
+                    </div>
+                    <div class="limit-bar">
+                        <div class="limit-bar-fill" style="width: 100%"></div>
+                    </div>
+                </div>
+                
+                <div class="upgrade-benefits">
+                    <h4>Premium'a Geçerek:</h4>
+                    <ul>
+                        <li>✓ <strong>20 tarla</strong> ekleyebilirsiniz</li>
+                        <li>✓ <strong>Günlük</strong> raporlar alabilirsiniz</li>
+                        <li>✓ <strong>1 yıllık</strong> geçmiş veriye erişebilirsiniz</li>
+                        <li>✓ <strong>Yüksek çözünürlüklü</strong> görüntüler indirebilirsiniz</li>
+                    </ul>
+                </div>
+                
+                <div class="contact-premium">
+                    <p>Premium'a geçmek için bizimle iletişime geçin:</p>
+                    <div class="contact-info-modal">
+                        <span class="contact-icon">🌐</span>
+                        <span class="contact-text">www.kayatarim.com</span>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Delete Confirmation Modal -->
+    <div class="modal-overlay" id="delete-modal">
+        <div class="modal-card delete-modal-card">
+            <div class="modal-header">
+                <div class="modal-icon">⚠️</div>
+                <h2>Tarlayı Sil</h2>
+                <p>Bu işlem geri alınamaz</p>
+            </div>
+            
+            <div class="modal-body">
+                <p class="delete-warning">
+                    <strong id="delete-field-name">Bu tarla</strong> ve tüm analiz geçmişi kalıcı olarak silinecek.
+                </p>
+                
+                <div class="modal-actions">
+                    <button class="btn-cancel" onclick="closeDeleteModal()">İptal</button>
+                    <button class="btn-delete" id="btn-confirm-delete">Sil</button>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <script src="js/api.js"></script>
+    <script>
+        // Check auth
+        const token = localStorage.getItem('token');
+        const user = JSON.parse(localStorage.getItem('user') || '{}');
+        
+        if (!token) {
+            window.location.href = 'login.html';
+        }
+        
+        // Update UI with user info
+        document.getElementById('user-name').textContent = user.username || 'Kullanıcı';
+        document.getElementById('user-avatar').textContent = (user.username || 'U')[0].toUpperCase();
+        
+        // Max fields based on subscription
+        const maxFields = user.role === 'premium' ? 20 : 3;
+        document.querySelector('.counter-max').textContent = maxFields;
+        
+        if (user.role === 'premium') {
+            document.getElementById('user-role').textContent = 'Premium Plan';
+        }
+        
+        let fieldsData = [];
+        let deleteFieldId = null;
+        
+        // Load fields
+        async function loadFields() {
+            const loadingState = document.getElementById('loading-state');
+            const emptyState = document.getElementById('empty-state');
+            const fieldsGrid = document.getElementById('fields-grid');
+            
+            try {
+                const response = await fetch('http://localhost:5000/api/fields', {
+                    headers: {
+                        'Authorization': 'Bearer ' + token
+                    }
+                });
+                
+                if (response.ok) {
+                    const data = await response.json();
+                    fieldsData = data.fields || [];
+                    
+                    // Update counter
+                    document.querySelector('.counter-current').textContent = fieldsData.length;
+                    
+                    // Update counter color based on limit
+                    const counter = document.getElementById('field-counter');
+                    if (fieldsData.length >= maxFields) {
+                        counter.classList.add('at-limit');
+                    }
+                    
+                    loadingState.style.display = 'none';
+                    
+                    if (fieldsData.length === 0) {
+                        emptyState.style.display = 'block';
+                    } else {
+                        fieldsGrid.innerHTML = '';
+                        fieldsData.forEach(field => {
+                            fieldsGrid.appendChild(createFieldCard(field));
+                        });
+                    }
+                } else if (response.status === 401) {
+                    logout();
+                }
+            } catch (error) {
+                console.error('Tarlalar yüklenirken hata:', error);
+                loadingState.innerHTML = '<p class="error">Yüklenirken hata oluştu</p>';
+            }
+        }
+        
+        // Create field card
+        function createFieldCard(field) {
+            const card = document.createElement('div');
+            card.className = 'field-card';
+            
+            const riskClass = field.model_ready ? 'active' : 'pending';
+            const riskText = field.model_ready ? 'Aktif' : 'Hazırlanıyor';
+            
+            card.innerHTML = `
+                <div class="field-card-header">
+                    <div class="field-icon">🌾</div>
+                    <div class="field-status ${riskClass}">${riskText}</div>
+                </div>
+                <div class="field-card-body">
+                    <h3 class="field-name">${field.name}</h3>
+                    <p class="field-location">${field.location || 'Konum belirtilmemiş'}</p>
+                    ${field.crop_type ? `<span class="field-crop">${field.crop_type}</span>` : ''}
+                    <p class="field-date">Eklenme: ${new Date(field.created_at).toLocaleDateString('tr-TR')}</p>
+                </div>
+                <div class="field-card-footer">
+                    <a href="field-detail.html?id=${field.id}" class="btn-view">
+                        <span>📊</span> Detay
+                    </a>
+                    <button class="btn-delete-field" onclick="showDeleteModal(${field.id}, '${field.name}')">
+                        <span>🗑️</span>
+                    </button>
+                </div>
+            `;
+            
+            return card;
+        }
+        
+        // Check if add button should show limit warning
+        document.querySelector('.btn-add-field').addEventListener('click', function(e) {
+            if (fieldsData.length >= maxFields) {
+                e.preventDefault();
+                showLimitModal();
+            }
+        });
+        
+        // Modal functions
+        function showLimitModal() {
+            document.getElementById('limit-modal').classList.add('show');
+        }
+        
+        function closeLimitModal() {
+            document.getElementById('limit-modal').classList.remove('show');
+        }
+        
+        function showDeleteModal(fieldId, fieldName) {
+            deleteFieldId = fieldId;
+            document.getElementById('delete-field-name').textContent = fieldName;
+            document.getElementById('delete-modal').classList.add('show');
+        }
+        
+        function closeDeleteModal() {
+            document.getElementById('delete-modal').classList.remove('show');
+            deleteFieldId = null;
+        }
+        
+        // Delete field
+        document.getElementById('btn-confirm-delete').addEventListener('click', async function() {
+            if (!deleteFieldId) return;
+            
+            try {
+                const response = await fetch(`http://localhost:5000/api/fields/${deleteFieldId}`, {
+                    method: 'DELETE',
+                    headers: {
+                        'Authorization': 'Bearer ' + token
+                    }
+                });
+                
+                if (response.ok) {
+                    closeDeleteModal();
+                    loadFields(); // Reload
+                } else {
+                    alert('Silme işlemi başarısız!');
+                }
+            } catch (error) {
+                console.error('Silme hatası:', error);
+                alert('Bir hata oluştu!');
+            }
+        });
+        
+        // Close modals on outside click
+        document.querySelectorAll('.modal-overlay').forEach(modal => {
+            modal.addEventListener('click', (e) => {
+                if (e.target.classList.contains('modal-overlay')) {
+                    modal.classList.remove('show');
+                }
+            });
+        });
+        
+        // Logout function
+        function logout() {
+            localStorage.removeItem('token');
+            localStorage.removeItem('user');
+            window.location.href = 'login.html';
+        }
+        
+        // Load data on page load
+        loadFields();
+    </script>
+</body>
+</html>
